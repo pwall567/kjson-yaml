@@ -1,0 +1,8 @@
+first:
+  ? key1
+  : value1
+  key2: value2
+second:
+  key1: value1
+  ? key2
+  : value2

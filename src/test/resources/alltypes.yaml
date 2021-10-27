@@ -1,0 +1,7 @@
+string: str
+int: 1
+decimal: 1.23
+boolean: true
+empty:
+array: []
+object: {}

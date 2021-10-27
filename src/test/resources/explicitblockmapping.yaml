@@ -1,0 +1,4 @@
+outer:
+  ? "key1"
+  :
+    inner1: "value1"

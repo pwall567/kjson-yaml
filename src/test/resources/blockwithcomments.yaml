@@ -1,0 +1,18 @@
+outer:
+  - inner1: xxx
+    inner2: >-
+      alpha
+      beta
+
+  # comment
+
+  - inner1: yyy
+    inner2: >-
+      gamma
+      delta
+
+# another comment
+
+  - inner1: zzz
+    inner2: >-
+      epsilon
