@@ -467,7 +467,7 @@ class ParserTest {
     }
 
     @Test fun `should parse nested block scalar`() {
-        val reader = StringReader(NoCommitCDSTest.test1)
+        val reader = StringReader(test1)
         val result = Parser().parse(reader)
         log.info { result.rootNode?.toJSON() }
         val rootNode = result.rootNode ?: fail("Result is null")
