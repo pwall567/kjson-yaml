@@ -2,7 +2,7 @@
  * @(#) Parser.kt
  *
  * kjson-yaml  Kotlin YAML processor
- * Copyright (c) 2020, 2021 Peter Wall
+ * Copyright (c) 2020, 2021, 2022 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,7 +39,7 @@ import io.kjson.JSONObject
 import io.kjson.JSONString
 import io.kjson.JSONValue
 import io.kjson.yaml.YAMLDocument
-import net.pwall.log.LoggerDelegate
+import net.pwall.log.getLogger
 import net.pwall.pipeline.codec.DynamicReader
 import net.pwall.text.TextMatcher
 
@@ -892,7 +892,7 @@ class Parser {
 
     companion object {
 
-        val log by LoggerDelegate()
+        val log = getLogger()
 
         private fun warn(message: String) {
             log.warn { "YAML Warning: $message" }

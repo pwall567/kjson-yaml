@@ -43,7 +43,7 @@ import io.kjson.JSON.asString
 import io.kjson.pointer.JSONPointer
 import io.kjson.yaml.YAMLException
 import net.pwall.json.JSONSimple
-import net.pwall.log.LoggerDelegate
+import net.pwall.log.getLogger
 
 class ParserTest {
 
@@ -531,7 +531,7 @@ class ParserTest {
 
     companion object {
 
-        val log by LoggerDelegate()
+        val log = getLogger()
 
         const val test1 = """
 aaa:
