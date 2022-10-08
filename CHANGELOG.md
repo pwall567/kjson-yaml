@@ -2,6 +2,10 @@
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [1.7] - 2022-10-08
+### Changed
+- `pom.xml`: updated dependency versions
+
 ## [1.6] - 2022-06-24
 ### Changed
 - `pom.xml`, `Parser`: switched to `log-front` 5.0, dropped `logback`
