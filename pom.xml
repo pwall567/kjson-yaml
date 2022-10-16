@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>kjson-yaml</artifactId>
-  <version>1.7</version>
+  <version>1.9</version>
   <name>Kotlin YAML processor</name>
   <packaging>jar</packaging>
   <url>https://github.com/pwall567/kjson-yaml</url>
@@ -64,7 +64,7 @@
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>kjson-pointer</artifactId>
-      <version>2.0</version>
+      <version>2.3</version>
     </dependency>
     <dependency>
       <groupId>net.pwall.text</groupId>
@@ -74,7 +74,7 @@
     <dependency>
       <groupId>net.pwall.util</groupId>
       <artifactId>pipelines</artifactId>
-      <version>3.1</version>
+      <version>3.2</version>
     </dependency>
     <dependency>
       <groupId>net.pwall.log</groupId>

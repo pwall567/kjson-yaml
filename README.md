@@ -56,25 +56,25 @@ Also, the parser may not yet meet the specification in all respects, even for th
 
 ## Dependency Specification
 
-The latest version of the library is 1.7, and it may be obtained from the Maven Central repository.
+The latest version of the library is 1.9, and it may be obtained from the Maven Central repository.
 
 ### Maven
 ```xml
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>kjson-yaml</artifactId>
-      <version>1.7</version>
+      <version>1.9</version>
     </dependency>
 ```
 ### Gradle
 ```groovy
-    implementation 'io.kjson:kjson-yaml:1.7'
+    implementation 'io.kjson:kjson-yaml:1.9'
 ```
 ### Gradle (kts)
 ```kotlin
-    implementation("io.kjson:kjson-yaml:1.7")
+    implementation("io.kjson:kjson-yaml:1.9")
 ```
 
 Peter Wall
 
-2022-10-08
+2022-10-16
