@@ -27,7 +27,7 @@ For example, to retrieve the `description` property of the `info` section of an 
     val file = File("path.to.swagger.file")
     val yamlDocument = YAML.parse(file)
     val pointer = JSONPointer("/info/description")
-    val description = pointer.find(yamlDocument.rootNode)
+    val description = yamlDocument.rootNode[pointer]
 ```
 
 ## Implemented Subset
@@ -56,25 +56,25 @@ Also, the parser may not yet meet the specification in all respects, even for th
 
 ## Dependency Specification
 
-The latest version of the library is 1.9, and it may be obtained from the Maven Central repository.
+The latest version of the library is 1.10, and it may be obtained from the Maven Central repository.
 
 ### Maven
 ```xml
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>kjson-yaml</artifactId>
-      <version>1.9</version>
+      <version>1.10</version>
     </dependency>
 ```
 ### Gradle
 ```groovy
-    implementation 'io.kjson:kjson-yaml:1.9'
+    implementation 'io.kjson:kjson-yaml:1.10'
 ```
 ### Gradle (kts)
 ```kotlin
-    implementation("io.kjson:kjson-yaml:1.9")
+    implementation("io.kjson:kjson-yaml:1.10")
 ```
 
 Peter Wall
 
-2022-10-16
+2022-10-27
