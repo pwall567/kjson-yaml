@@ -42,11 +42,11 @@ The currently implemented subset includes:
 - Flow Sequences
 - Flow Mappings
 - Comments
+- Anchors and Aliases
 - `%YAML` directive
 
 Not yet implemented:
 
-- Anchors and Aliases
 - Directives other than `%YAML`
 - Tags
 - Multiple documents in a single file
@@ -77,4 +77,4 @@ The latest version of the library is 1.10, and it may be obtained from the Maven
 
 Peter Wall
 
-2022-10-27
+2022-11-17

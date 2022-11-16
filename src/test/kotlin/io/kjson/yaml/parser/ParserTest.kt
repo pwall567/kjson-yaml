@@ -28,6 +28,7 @@ package io.kjson.yaml.parser
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.expect
 import kotlin.test.fail
 
@@ -463,6 +464,76 @@ class ParserTest {
                 expect("value1") { second["key1"].asString }
                 expect("value2") { second["key2"].asString }
             }
+        }
+    }
+
+    @Test fun `should process anchor and alias`() {
+        val file = File("src/test/resources/anchor.yaml")
+        val result = Parser().parse(file)
+        log.debug { result.rootNode?.toJSON() }
+        result.rootNode.asObject.let { obj ->
+            expect(2) { obj.size }
+            obj["abc"].asArray.let { abc ->
+                expect(3) { abc.size }
+                expect("first") { abc[0].asString }
+                expect("second") { abc[1].asString }
+                expect("third") { abc[2].asString }
+            }
+            assertSame(obj["abc"], obj["def"])
+        }
+    }
+
+    @Test fun `should process anchor and alias in array`() {
+        val file = File("src/test/resources/anchorArray.yaml")
+        val result = Parser().parse(file)
+        log.debug { result.rootNode?.toJSON() }
+        result.rootNode.asArray.let { arr ->
+            expect(3) { arr.size }
+            expect("abc") { arr[0].asString }
+            expect("def") { arr[1].asString }
+            assertSame(arr[0], arr[2])
+        }
+    }
+
+    @Test fun `should process anchor and alias in flow sequence`() {
+        val file = File("src/test/resources/anchorFlowSequence.yaml")
+        val result = Parser().parse(file)
+        log.debug { result.rootNode?.toJSON() }
+        result.rootNode.asObject.let { obj ->
+            expect(2) { obj.size }
+            expect("a very long string") { obj["aaa"].asString }
+            obj["bbb"].asArray.let { arr ->
+                assertSame(arr[0], obj["aaa"])
+                assertSame(arr[1], obj["aaa"])
+            }
+        }
+    }
+
+    @Test fun `should process anchor and alias in flow mapping`() {
+        val file = File("src/test/resources/anchorFlowMapping.yaml")
+        val result = Parser().parse(file)
+        log.debug { result.rootNode?.toJSON() }
+        result.rootNode.asObject.let { obj ->
+            expect(2) { obj.size }
+            expect("a very long string") { obj["aaa"].asString }
+            obj["bbb"].asObject.let { innerObject ->
+                assertSame(innerObject["first"], obj["aaa"])
+                assertSame(innerObject["second"], obj["aaa"])
+            }
+        }
+    }
+
+    @Test fun `should throw exception on unknown anchor`() {
+        val file = File("src/test/resources/anchorError1.yaml")
+        assertFailsWith<YAMLParseException> { Parser().parse(file) }.let {
+            expect("Can't locate alias \"unknown\" at 2:14") { it.message }
+        }
+    }
+
+    @Test fun `should throw exception on recursive anchor`() {
+        val file = File("src/test/resources/anchorError2.yaml")
+        assertFailsWith<YAMLParseException> { Parser().parse(file) }.let {
+            expect("Can't locate alias \"aaa\" at 2:12") { it.message }
         }
     }
 

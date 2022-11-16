@@ -2,6 +2,10 @@
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [Unreleased]
+### Changed
+- `Parser`: added anchor and alias
+
 ## [1.10] - 2022-10-27
 ### Changed
 - `pom.xml`: updated dependency versions

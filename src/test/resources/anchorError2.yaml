@@ -1,0 +1,2 @@
+abc: &aaa
+  xyz: *aaa

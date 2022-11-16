@@ -38,6 +38,7 @@ import io.kjson.JSONLong
 import io.kjson.JSONObject
 import io.kjson.JSONString
 import io.kjson.JSONValue
+import io.kjson.pointer.JSONPointer
 import io.kjson.yaml.YAMLDocument
 import net.pwall.log.getLogger
 import net.pwall.pipeline.codec.DynamicReader
@@ -83,7 +84,8 @@ class Parser {
     fun parse(reader: Reader): YAMLDocument {
         var state = State.INITIAL
         var version: Pair<Int, Int>? = null
-        val outerBlock = InitialBlock(0)
+        val context = Context()
+        val outerBlock = InitialBlock(context, 0)
         var lineNumber = 0
         reader.forEachLine { text ->
             val line = Line(++lineNumber, text)
@@ -137,7 +139,8 @@ class Parser {
             }
             "Parse complete; result is $type"
         }
-        return version?.let { YAMLDocument(rootNode, emptyMap(), it.first, it.second) } ?: YAMLDocument(rootNode)
+        return version?.let { YAMLDocument(rootNode, context.tagMap, it.first, it.second) } ?:
+                YAMLDocument(rootNode, context.tagMap)
     }
 
     private fun processYAMLDirective(line: Line): Pair<Int, Int> {
@@ -158,13 +161,31 @@ class Parser {
         return majorVersion to minorVersion
     }
 
-    abstract class Block(val indent: Int) {
+    class Context(
+        val anchorMap: MutableMap<String, JSONValue> = mutableMapOf(),
+        val tagMap: MutableMap<JSONPointer, String> = mutableMapOf(),
+        @Suppress("unused")
+        val pointer: JSONPointer = JSONPointer.root,
+    ) {
+
+        fun saveAnchor(name: String?, node: JSONValue?) {
+            if (name != null && node != null)
+                anchorMap[name] = node
+        }
+
+        fun child(name: String) = Context(anchorMap, tagMap, pointer.child(name))
+
+        fun child(index: Int) = Context(anchorMap, tagMap, pointer.child(index))
+
+    }
+
+    abstract class Block(val context: Context, val indent: Int) {
         abstract fun processLine(line: Line)
         open fun processBlankLine(line: Line) {}
         abstract fun conclude(line: Line): JSONValue?
     }
 
-    object ErrorBlock : Block(0) {
+    object ErrorBlock : Block(Context(), 0) {
 
         override fun processLine(line: Line) = fatal("Should not happen", line)
 
@@ -172,13 +193,14 @@ class Parser {
 
     }
 
-    class InitialBlock(indent: Int) : Block(indent) {
+    class InitialBlock(context: Context, indent: Int) : Block(context, indent) {
 
         enum class State { INITIAL, CHILD, CLOSED }
 
         private var state: State = State.INITIAL
         private var node: JSONValue? = null
         private var child: Block = ErrorBlock
+        private var anchor: String? = null
 
         override fun processLine(line: Line) {
             when (state) {
@@ -190,10 +212,15 @@ class Parser {
 
         private fun processFirstLine(line: Line) {
             val initialIndex = line.index
+            if (line.match('&'))
+                anchor = line.getAnchorName()
             val scalar = when {
                 line.atEnd() -> return
+                line.match('*') -> line.getAnchorName().let {
+                    AliasChild(context.anchorMap[it] ?: fatal("Can't locate alias \"$it\"", line))
+                }
                 line.matchDash() -> {
-                    child = SequenceBlock(initialIndex)
+                    child = SequenceBlock(context, initialIndex)
                     if (!line.atEnd())
                         child.processLine(line)
                     state = State.CHILD
@@ -201,27 +228,41 @@ class Parser {
                 }
                 line.match('"') -> line.processDoubleQuotedScalar()
                 line.match('\'') -> line.processSingleQuotedScalar()
-                line.match('[') -> FlowSequence(false).also { it.continuation(line) }
-                line.match('{') -> FlowMapping(false).also { it.continuation(line) }
+                line.match('[') -> FlowSequence(context, false).also { it.continuation(line) }
+                line.match('{') -> FlowMapping(context, false).also { it.continuation(line) }
                 line.match('?') -> {
                     line.skipSpaces()
-                    child = MappingBlock(initialIndex)
+                    child = MappingBlock(context, initialIndex)
                     if (!line.atEnd())
                         child.processLine(line)
                     state = State.CHILD
                     return
                 }
                 line.match(':') -> fatal("Can't handle standalone mapping values", line)
+                line.match('|') -> {
+                    val chomping = line.determineChomping()
+                    line.skipSpaces()
+                    if (!line.atEnd())
+                        fatal("Illegal literal block header", line)
+                    LiteralBlockScalar(indent, chomping)
+                }
+                line.match('>') -> {
+                    val chomping = line.determineChomping()
+                    line.skipSpaces()
+                    if (!line.atEnd())
+                        fatal("Illegal folded block header", line)
+                    FoldedBlockScalar(indent, chomping)
+                }
                 else -> line.processPlainScalar()
             }
             line.skipSpaces()
             if (line.matchColon()) {
                 if (line.atEnd()) {
-                    child = MappingBlock(initialIndex, scalar.text.toString())
+                    child = MappingBlock(context, initialIndex, scalar.text.toString())
                     state = State.CHILD
                 }
                 else {
-                    child = MappingBlock(initialIndex, scalar.text.toString(), line)
+                    child = MappingBlock(context, initialIndex, scalar.text.toString(), line)
                     state = State.CHILD
                 }
             }
@@ -231,7 +272,7 @@ class Parser {
                     state = State.CLOSED
                 }
                 else {
-                    child = ChildBlock(initialIndex, scalar)
+                    child = ChildBlock(context, initialIndex, scalar)
                     state = State.CHILD
                 }
             }
@@ -252,29 +293,30 @@ class Parser {
                 State.CLOSED -> {}
             }
             state = State.CLOSED
+            context.saveAnchor(anchor, node)
             return node
         }
 
     }
 
-    class MappingBlock(indent: Int) : Block(indent) {
+    class MappingBlock(context: Context, indent: Int) : Block(context, indent) {
 
         enum class State { KEY, CHILD, QM_CHILD, COLON, CLOSED }
 
         private var state: State = State.QM_CHILD
-        private var child: Block = InitialBlock(indent + 1)
+        private var child: Block = InitialBlock(context, indent + 1)
         private val properties = JSONObject.Builder()
         private var key: String = ""
 
-        constructor(indent: Int, key: String) : this(indent) {
+        constructor(context: Context, indent: Int, key: String) : this(context, indent) {
             this.key = key
-            child = InitialBlock(indent + 1)
+            child = InitialBlock(context, indent + 1)
             state = State.CHILD
         }
 
-        constructor(indent: Int, key: String, line: Line) : this(indent) {
+        constructor(context: Context, indent: Int, key: String, line: Line) : this(context, indent) {
             this.key = key
-            child = ChildBlock(indent + 1)
+            child = InitialBlock(context, indent + 1)
             child.processLine(line)
             state = State.CHILD
         }
@@ -327,9 +369,9 @@ class Parser {
                 line.match('?') -> {
                     line.skipSpaces()
                     if (line.atEnd())
-                        child = InitialBlock(indent + 1)
+                        child = InitialBlock(context, indent + 1)
                     else {
-                        child = InitialBlock(line.index)
+                        child = InitialBlock(context, line.index)
                         child.processLine(line)
                     }
                     state = State.QM_CHILD
@@ -348,11 +390,11 @@ class Parser {
                             fatal("Duplicate key in mapping - $key", line)
                         line.skipSpaces()
                         if (line.atEnd()) {
-                            child = InitialBlock(indent + 1)
+                            child = InitialBlock(context.child(key), indent + 1)
                             state = State.CHILD
                         }
                         else {
-                            child = ChildBlock(indent + 1)
+                            child = InitialBlock(context.child(key), indent + 1)
                             child.processLine(line)
                             state = State.CHILD
                         }
@@ -367,9 +409,9 @@ class Parser {
             if (line.match(':')) {
                 line.skipSpaces()
                 if (line.atEnd())
-                    child = InitialBlock(indent + 1)
+                    child = InitialBlock(context.child(key), indent + 1)
                 else {
-                    child = InitialBlock(line.index)
+                    child = InitialBlock(context.child(key), line.index)
                     child.processLine(line)
                 }
                 state = State.CHILD
@@ -392,13 +434,13 @@ class Parser {
 
     }
 
-    class SequenceBlock(indent: Int) : Block(indent) {
+    class SequenceBlock(context: Context, indent: Int) : Block(context, indent) {
 
         enum class State { DASH, CHILD, CLOSED }
 
         private var state: State = State.CHILD
         private val items = JSONArray.Builder()
-        private var child: Block = InitialBlock(indent + 2)
+        private var child: Block = InitialBlock(context.child(0), indent + 2)
 
         override fun processLine(line: Line) {
             when (state) {
@@ -427,9 +469,9 @@ class Parser {
         private fun processDash(line: Line) {
             if (line.matchDash()) {
                 if (line.atEnd())
-                    child = InitialBlock(indent + 2)
+                    child = InitialBlock(context.child(items.size), indent + 2)
                 else {
-                    child = InitialBlock(line.index)
+                    child = InitialBlock(context.child(items.size), line.index)
                     child.processLine(line)
                 }
                 state = State.CHILD
@@ -450,15 +492,16 @@ class Parser {
 
     }
 
-    class ChildBlock(indent: Int) : Block(indent) {
+    class ChildBlock(context: Context, indent: Int) : Block(context, indent) {
 
         enum class State { INITIAL, CONTINUATION, CLOSED }
 
         private var state: State = State.INITIAL
         private var child: Child = PlainScalar("")
         private var node: JSONValue? = null
+        private var anchor: String? = null
 
-        constructor(indent: Int, scalar: Child) : this(indent) {
+        constructor(context: Context, indent: Int, scalar: Child) : this(context, indent) {
             this.child = scalar
             state = State.CONTINUATION
         }
@@ -466,9 +509,14 @@ class Parser {
         override fun processLine(line: Line) {
             child = when (state) {
                 State.INITIAL -> {
+                    if (line.match('&'))
+                        anchor = line.getAnchorName()
                     when {
                         line.isAtEnd -> return
                         line.match('#') -> return
+                        line.match('*') -> line.getAnchorName().let {
+                            AliasChild(context.anchorMap[it] ?: fatal("Can't locate alias \"$it\"", line))
+                        }
                         line.match('"') -> line.processDoubleQuotedScalar()
                         line.match('\'') -> line.processSingleQuotedScalar()
                         line.match('|') -> {
@@ -485,8 +533,8 @@ class Parser {
                                 fatal("Illegal folded block header", line)
                             FoldedBlockScalar(indent, chomping)
                         }
-                        line.match('[') -> FlowSequence(false).also { it.continuation(line) }
-                        line.match('{') -> FlowMapping(false).also { it.continuation(line) }
+                        line.match('[') -> FlowSequence(context, false).also { it.continuation(line) }
+                        line.match('{') -> FlowMapping(context, false).also { it.continuation(line) }
                         line.match('?') -> fatal("Can't handle standalone mapping keys", line)
                         line.match(':') -> fatal("Can't handle standalone mapping values", line)
                         else -> line.processPlainScalar()
@@ -528,13 +576,8 @@ class Parser {
                 State.CLOSED -> {}
             }
             state = State.CLOSED
+            context.saveAnchor(anchor, node)
             return node
-        }
-
-        private fun Line.determineChomping(): BlockScalar.Chomping = when {
-            match('-') -> BlockScalar.Chomping.STRIP
-            match('+') -> BlockScalar.Chomping.KEEP
-            else -> BlockScalar.Chomping.CLIP
         }
 
     }
@@ -552,7 +595,20 @@ class Parser {
 
     }
 
-    class FlowSequence(terminated: Boolean) : Child(terminated) {
+    class AliasChild(private val node: JSONValue): Child(true) {
+
+        override val text: CharSequence
+            get() = getYAMLNode().toString()
+
+        override fun continuation(line: Line): Child {
+            fatal("Illegal data after alias", line)
+        }
+
+        override fun getYAMLNode(): JSONValue = node
+
+    }
+
+    class FlowSequence(private val context: Context, terminated: Boolean) : Child(terminated) {
 
         enum class State { ITEM, CONTINUATION, COMMA, CLOSED }
 
@@ -563,17 +619,24 @@ class Parser {
         private var child: Child = FlowNode("")
         private var key: String? = null
         private val items = JSONArray.Builder()
+        private var anchor: String? = null
 
         private fun processLine(line: Line) {
             while (!line.atEnd()) {
                 if (state != State.COMMA) {
                     when (state) {
                         State.ITEM -> {
+                            line.skipSpaces()
+                            if (line.match('&'))
+                                anchor = line.getAnchorName()
                             child = when {
                                 line.match('"') -> line.processDoubleQuotedScalar()
                                 line.match('\'') -> line.processSingleQuotedScalar()
-                                line.match('[') -> FlowSequence(false).also { it.continuation(line) }
-                                line.match('{') -> FlowMapping(false).also { it.continuation(line) }
+                                line.match('[') -> FlowSequence(context, false).also { it.continuation(line) }
+                                line.match('{') -> FlowMapping(context, false).also { it.continuation(line) }
+                                line.match('*') -> line.getAnchorName().let {
+                                    AliasChild(context.anchorMap[it] ?: fatal("Can't locate alias \"$it\"", line))
+                                }
                                 else -> line.processFlowNode()
                             }
                         }
@@ -591,13 +654,9 @@ class Parser {
                 }
                 when {
                     line.match(']') -> {
-                        key?.let {
-                            items.add(JSONObject.of(it to child.getYAMLNode()))
-                        } ?: child.getYAMLNode()?.let { items.add(it) }
-//                        if (key == null)
-//                            child.getYAMLNode()?.let { items.add(it) }
-//                        else
-//                            items.add(JSONObject.of(key!! to child.getYAMLNode())) //YAMLMapping(mapOf(key to child.getYAMLNode())))
+                        val item = key?.let { JSONObject.of(it to child.getYAMLNode()) } ?: child.getYAMLNode()
+                        item?.let { items.add(it) }
+                        context.saveAnchor(anchor, item)
                         terminated = true
                         state = State.CLOSED
                         break
@@ -607,8 +666,11 @@ class Parser {
                         state = State.ITEM
                     }
                     line.match(',') -> {
-                        items.add(key?.let { JSONObject.of(it to child.getYAMLNode()) } ?: child.getYAMLNode())
+                        val item = key?.let { JSONObject.of(it to child.getYAMLNode()) } ?: child.getYAMLNode()
+                        items.add(item)
+                        context.saveAnchor(anchor, item)
                         key = null
+                        anchor = null
                         state = State.ITEM
                     }
                     else -> fatal("Unexpected character in flow sequence", line)
@@ -626,7 +688,7 @@ class Parser {
 
     }
 
-    class FlowMapping(terminated: Boolean) : Child(terminated) {
+    class FlowMapping(private val context: Context, terminated: Boolean) : Child(terminated) {
 
         enum class State { ITEM, CONTINUATION, COMMA, CLOSED }
 
@@ -634,6 +696,7 @@ class Parser {
         private var child: Child = FlowNode("")
         private var key: String? = null
         private val properties = JSONObject.Builder()
+        private var anchor: String? = null
 
         override val text: CharSequence
             get() = getYAMLNode().toString()
@@ -651,11 +714,17 @@ class Parser {
                 if (state != State.COMMA) {
                     when (state) {
                         State.ITEM -> {
+                            line.skipSpaces()
+                            if (line.match('&'))
+                                anchor = line.getAnchorName()
                             child = when {
                                 line.match('"') -> line.processDoubleQuotedScalar()
                                 line.match('\'') -> line.processSingleQuotedScalar()
-                                line.match('[') -> FlowSequence(false).also { it.continuation(line) }
-                                line.match('{') -> FlowMapping(false).also { it.continuation(line) }
+                                line.match('[') -> FlowSequence(context, false).also { it.continuation(line) }
+                                line.match('{') -> FlowMapping(context, false).also { it.continuation(line) }
+                                line.match('*') -> line.getAnchorName().let {
+                                    AliasChild(context.anchorMap[it] ?: fatal("Can't locate alias \"$it\"", line))
+                                }
                                 else -> line.processFlowNode()
                             }
                         }
@@ -673,12 +742,10 @@ class Parser {
                 }
                 when {
                     line.match('}') -> {
-                        if (key == null) {
+                        key?.let { addProperty(it, child.getYAMLNode()) } ?: run {
                             if (child.getYAMLNode() != null)
                                 fatal("Unexpected end of flow mapping", line)
                         }
-                        else
-                            properties.add(key.toString(), child.getYAMLNode())
                         terminated = true
                         state = State.CLOSED
                         break
@@ -688,15 +755,19 @@ class Parser {
                         state = State.ITEM
                     }
                     line.match(',') -> {
-                        if (key == null)
-                            fatal("Key missing in flow mapping", line)
-                        properties.add(key.toString(), child.getYAMLNode())
+                        key?.let { addProperty(it, child.getYAMLNode()) } ?: fatal("Key missing in flow mapping", line)
                         key = null
+                        anchor = null
                         state = State.ITEM
                     }
                     else -> fatal("Unexpected character in flow mapping", line)
                 }
             }
+        }
+
+        private fun addProperty(key: String, value: JSONValue?) {
+            properties.add(key, value)
+            context.saveAnchor(anchor, value)
         }
 
     }
@@ -1023,6 +1094,26 @@ class Parser {
                 }
                 else -> fatal("Illegal escape sequence in double quoted scalar", this)
             }
+        }
+
+        fun Line.getAnchorName(): String {
+            val anchorStart = index
+            while (!isAtEnd) {
+                if (matchAny(" \t[]{},")) {
+                    index--
+                    break
+                }
+                index++
+            }
+            if (anchorStart == index)
+                fatal("Anchor name missing", this)
+            return getString(anchorStart, index).also { skipSpaces() }
+        }
+
+        private fun Line.determineChomping(): BlockScalar.Chomping = when {
+            match('-') -> BlockScalar.Chomping.STRIP
+            match('+') -> BlockScalar.Chomping.KEEP
+            else -> BlockScalar.Chomping.CLIP
         }
 
     }

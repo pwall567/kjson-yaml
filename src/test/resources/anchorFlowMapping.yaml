@@ -1,0 +1,2 @@
+aaa: &note "a very long string"
+bbb: { first: *note, second: *note }
