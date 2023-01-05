@@ -2,7 +2,7 @@
  * @(#) Parser.kt
  *
  * kjson-yaml  Kotlin YAML processor
- * Copyright (c) 2020, 2021, 2022 Peter Wall
+ * Copyright (c) 2020, 2021, 2022, 2023 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -96,6 +96,10 @@ class Parser {
                             version = processYAMLDirective(line)
                             state = State.DIRECTIVE
                         }
+                        text.startsWith("%TAG") -> {
+                            processTAGDirective(context, line)
+                            state = State.DIRECTIVE
+                        }
                         text.startsWith('%') -> {
                             warn("Unrecognised directive ignored - $text")
                             state = State.DIRECTIVE
@@ -111,6 +115,7 @@ class Parser {
                 State.DIRECTIVE -> {
                     when {
                         text.startsWith("%YAML") -> fatal("Duplicate or misplaced %YAML directive", line)
+                        text.startsWith("%TAG") -> processTAGDirective(context, line)
                         text.startsWith('%') -> warn("Unrecognised directive ignored - $text")
                         text.startsWith("---") -> state = State.MAIN
                         text.startsWith("...") -> state = State.ENDED
@@ -145,8 +150,10 @@ class Parser {
 
     private fun processYAMLDirective(line: Line): Pair<Int, Int> {
         line.skipFixed(5)
-        if (!line.matchSpaces() || !line.matchDec())
+        if (!line.matchSpaces())
             fatal("Illegal %YAML directive", line)
+        if (!line.matchDec())
+            fatal("Illegal version number on %YAML directive", line)
         val majorVersion = line.resultInt
         if (!line.match('.') || !line.matchDec())
             fatal("Illegal version number on %YAML directive", line)
@@ -161,21 +168,83 @@ class Parser {
         return majorVersion to minorVersion
     }
 
+    private fun processTAGDirective(context: Context, line: Line) {
+        line.skipFixed(4)
+        if (!line.matchSpaces())
+            fatal("Illegal %TAG directive", line)
+        if (!line.match('!'))
+            fatal("Illegal tag handle on %TAG directive", line)
+        val handleStart = line.start
+        val handle = when {
+            line.matchSpace() -> {
+                line.revert()
+                "!"
+            }
+            line.match('!') -> "!!"
+            else -> {
+                if (!line.matchSeq { it.isTagHandleChar() } || !line.match('!'))
+                    fatal("Illegal tag handle on %TAG directive", line)
+                line.getString(handleStart, line.index)
+            }
+        }
+        if (context.tagHandles.containsKey(handle))
+            fatal("Duplicate tag handle", line)
+        if (!line.matchSpaces())
+            fatal("Illegal %TAG directive", line)
+        line.skipToSpace()
+        val prefix = line.result
+        if (!prefix.startsWith('!')) {
+            val tm = TextMatcher(prefix)
+            if (!tm.matchURI() || !tm.isAtEnd)
+                fatal("Illegal prefix on %TAG directive", line)
+        }
+        line.skipSpaces()
+        if (!line.atEnd())
+            fatal("Illegal data on %TAG directive", line)
+        context.tagHandles[handle] = prefix
+    }
+
     class Context(
+        val tagHandles: MutableMap<String, String> = mutableMapOf(),
         val anchorMap: MutableMap<String, JSONValue> = mutableMapOf(),
         val tagMap: MutableMap<JSONPointer, String> = mutableMapOf(),
         @Suppress("unused")
         val pointer: JSONPointer = JSONPointer.root,
     ) {
 
-        fun saveAnchor(name: String?, node: JSONValue?) {
-            if (name != null && node != null)
-                anchorMap[name] = node
+        fun getTagHandle(shortcut: String): String? {
+            return tagHandles[shortcut] ?: when (shortcut) {
+                "!" -> "!"
+                "!!" -> "tag:yaml.org,2002:"
+                else -> null
+            }
         }
 
-        fun child(name: String) = Context(anchorMap, tagMap, pointer.child(name))
+        fun saveNodeProperties(nodeProperties: NodeProperties, node: JSONValue?) {
+            nodeProperties.anchor?.let {
+                if (node != null)
+                    anchorMap[it] = node
+            }
+            nodeProperties.tag?.let {
+                tagMap[pointer] = it
+            }
+        }
 
-        fun child(index: Int) = Context(anchorMap, tagMap, pointer.child(index))
+        fun child(name: String) = Context(tagHandles, anchorMap, tagMap, pointer.child(name))
+
+        fun child(index: Int) = Context(tagHandles, anchorMap, tagMap, pointer.child(index))
+
+    }
+
+    class NodeProperties(
+        var anchor: String? = null,
+        var tag: String? = null,
+    ) {
+
+        fun reset() {
+            anchor = null
+            tag = null
+        }
 
     }
 
@@ -200,7 +269,7 @@ class Parser {
         private var state: State = State.INITIAL
         private var node: JSONValue? = null
         private var child: Block = ErrorBlock
-        private var anchor: String? = null
+        private val nodeProperties = NodeProperties()
 
         override fun processLine(line: Line) {
             when (state) {
@@ -212,8 +281,7 @@ class Parser {
 
         private fun processFirstLine(line: Line) {
             val initialIndex = line.index
-            if (line.match('&'))
-                anchor = line.getAnchorName()
+            line.processNodeProperties(nodeProperties, context)
             val scalar = when {
                 line.atEnd() -> return
                 line.match('*') -> line.getAnchorName().let {
@@ -293,7 +361,7 @@ class Parser {
                 State.CLOSED -> {}
             }
             state = State.CLOSED
-            context.saveAnchor(anchor, node)
+            context.saveNodeProperties(nodeProperties, node)
             return node
         }
 
@@ -499,7 +567,7 @@ class Parser {
         private var state: State = State.INITIAL
         private var child: Child = PlainScalar("")
         private var node: JSONValue? = null
-        private var anchor: String? = null
+        private val nodeProperties = NodeProperties()
 
         constructor(context: Context, indent: Int, scalar: Child) : this(context, indent) {
             this.child = scalar
@@ -509,8 +577,7 @@ class Parser {
         override fun processLine(line: Line) {
             child = when (state) {
                 State.INITIAL -> {
-                    if (line.match('&'))
-                        anchor = line.getAnchorName()
+                    line.processNodeProperties(nodeProperties, context)
                     when {
                         line.isAtEnd -> return
                         line.match('#') -> return
@@ -576,7 +643,7 @@ class Parser {
                 State.CLOSED -> {}
             }
             state = State.CLOSED
-            context.saveAnchor(anchor, node)
+            context.saveNodeProperties(nodeProperties, node)
             return node
         }
 
@@ -619,7 +686,7 @@ class Parser {
         private var child: Child = FlowNode("")
         private var key: String? = null
         private val items = JSONArray.Builder()
-        private var anchor: String? = null
+        private val nodeProperties = NodeProperties()
 
         private fun processLine(line: Line) {
             while (!line.atEnd()) {
@@ -627,8 +694,7 @@ class Parser {
                     when (state) {
                         State.ITEM -> {
                             line.skipSpaces()
-                            if (line.match('&'))
-                                anchor = line.getAnchorName()
+                            line.processNodeProperties(nodeProperties, context)
                             child = when {
                                 line.match('"') -> line.processDoubleQuotedScalar()
                                 line.match('\'') -> line.processSingleQuotedScalar()
@@ -656,7 +722,7 @@ class Parser {
                     line.match(']') -> {
                         val item = key?.let { JSONObject.of(it to child.getYAMLNode()) } ?: child.getYAMLNode()
                         item?.let { items.add(it) }
-                        context.saveAnchor(anchor, item)
+                        context.saveNodeProperties(nodeProperties, item)
                         terminated = true
                         state = State.CLOSED
                         break
@@ -668,9 +734,9 @@ class Parser {
                     line.match(',') -> {
                         val item = key?.let { JSONObject.of(it to child.getYAMLNode()) } ?: child.getYAMLNode()
                         items.add(item)
-                        context.saveAnchor(anchor, item)
+                        context.saveNodeProperties(nodeProperties, item)
                         key = null
-                        anchor = null
+                        nodeProperties.reset()
                         state = State.ITEM
                     }
                     else -> fatal("Unexpected character in flow sequence", line)
@@ -696,7 +762,7 @@ class Parser {
         private var child: Child = FlowNode("")
         private var key: String? = null
         private val properties = JSONObject.Builder()
-        private var anchor: String? = null
+        private val nodeProperties = NodeProperties()
 
         override val text: CharSequence
             get() = getYAMLNode().toString()
@@ -715,8 +781,7 @@ class Parser {
                     when (state) {
                         State.ITEM -> {
                             line.skipSpaces()
-                            if (line.match('&'))
-                                anchor = line.getAnchorName()
+                            line.processNodeProperties(nodeProperties, context)
                             child = when {
                                 line.match('"') -> line.processDoubleQuotedScalar()
                                 line.match('\'') -> line.processSingleQuotedScalar()
@@ -757,7 +822,7 @@ class Parser {
                     line.match(',') -> {
                         key?.let { addProperty(it, child.getYAMLNode()) } ?: fatal("Key missing in flow mapping", line)
                         key = null
-                        anchor = null
+                        nodeProperties.reset()
                         state = State.ITEM
                     }
                     else -> fatal("Unexpected character in flow mapping", line)
@@ -767,7 +832,7 @@ class Parser {
 
         private fun addProperty(key: String, value: JSONValue?) {
             properties.add(key, value)
-            context.saveAnchor(anchor, value)
+            context.saveNodeProperties(nodeProperties, value)
         }
 
     }
@@ -797,12 +862,13 @@ class Parser {
             if (text.startsWith("0o") && text.length > 2 && text.drop(2).all { it in '0'..'7' })
                 return intOrLong(text.drop(2).toLong(8))
             if (text.startsWith("0x") && text.length > 2 &&
-                text.drop(2).all { it in '0'..'9' || it in 'A'..'F' || it in 'a'..'f' })
+                    text.drop(2).all { it in '0'..'9' || it in 'A'..'F' || it in 'a'..'f' })
                 return intOrLong(text.drop(2).toLong(16))
             if (text.matchesInteger())
                 return intOrLong(text.toLong())
             if (text.matchesDecimal())
                 return JSONDecimal(text)
+            // TODO for ".nan", ".inf" etc, create JSONString, but add "tag:yaml.org,2002:float" tag (if none specified)
             return JSONString(text)
         }
 
@@ -1096,24 +1162,91 @@ class Parser {
             }
         }
 
-        fun Line.getAnchorName(): String {
-            val anchorStart = index
-            while (!isAtEnd) {
-                if (matchAny(" \t[]{},")) {
-                    index--
-                    break
+        fun Line.processNodeProperties(nodeProperties: NodeProperties, context: Context) {
+            while (true) {
+                when {
+                    match('&') -> {
+                        if (nodeProperties.anchor != null)
+                            fatal("Duplicate anchor", this)
+                        nodeProperties.anchor = getAnchorName()
+                    }
+                    match('!') -> {
+                        if (nodeProperties.tag != null)
+                            fatal("Duplicate tag", this)
+                        if (match('<')) { // verbatim tag
+                            if (match('!')) { // verbatim local tag
+                                val startTag = start
+                                if (!matchURI())
+                                    fatal("Illegal verbatim local tag", this)
+                                val endTag = index
+                                if (!match('>'))
+                                    fatal("Illegal verbatim local tag", this)
+                                nodeProperties.tag = getString(startTag, endTag)
+                            }
+                            else { // verbatim global tag
+                                // TODO are these two sections of code different? Can they be combined?
+                                val startTag = index
+                                if (!matchURI())
+                                    fatal("Illegal verbatim local tag", this)
+                                val endTag = index
+                                if (!match('>'))
+                                    fatal("Illegal verbatim local tag", this)
+                                nodeProperties.tag = getString(startTag, endTag)
+                            }
+                        }
+                        else { // tag shorthand
+                            val handle: String = when {
+                                match('!') -> "!!"
+                                matchSeq { it.isTagHandleChar() } && matchContinue(1, 1) { it == '!'} -> {
+                                    getString(start - 1, index)
+                                }
+                                else -> "!"
+                            }
+                            val prefix = context.getTagHandle(handle) ?: fatal("Tag handle not declared $handle", this)
+                            skip { it !in " \t[]{},!" }
+                            val suffix = result
+                            nodeProperties.tag = "$prefix$suffix"
+                        }
+                    }
+                    else -> break
                 }
-                index++
             }
-            if (anchorStart == index)
+        }
+
+        fun Line.getAnchorName(): String {
+            if (!matchSeq { it !in " \t[]{}," })
                 fatal("Anchor name missing", this)
-            return getString(anchorStart, index).also { skipSpaces() }
+            return result.also { skipSpaces() }
         }
 
         private fun Line.determineChomping(): BlockScalar.Chomping = when {
             match('-') -> BlockScalar.Chomping.STRIP
             match('+') -> BlockScalar.Chomping.KEEP
             else -> BlockScalar.Chomping.CLIP
+        }
+
+        private fun Char.isTagHandleChar(): Boolean =
+                this in 'A'..'Z' || this in 'a'..'z' || this in '0'..'9' || this == '-'
+
+        private fun TextMatcher.matchURI(): Boolean {
+            val uriStart = index
+            while (true) {
+                when {
+                    matchSeq { it.isTagHandleChar() || it in "#;/?:@&=+\$,_.~*'()[]" } -> {}
+                    match('%') && matchContinue(TextMatcher::isHexDigit) -> {
+                        if (!matchHex(2, 2)) {
+                            index--
+                            break
+                        }
+                    }
+                    else -> break
+                }
+            }
+            if (index > uriStart) {
+                start = uriStart
+                return true
+            }
+            return false
         }
 
     }

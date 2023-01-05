@@ -42,13 +42,13 @@ The currently implemented subset includes:
 - Flow Sequences
 - Flow Mappings
 - Comments
+- Tags
 - Anchors and Aliases
 - `%YAML` directive
+- `%TAG` directive
 
 Not yet implemented:
 
-- Directives other than `%YAML`
-- Tags
 - Multiple documents in a single file
 - Named floating-point pseudo-values (`.inf`, `.nan`)
 

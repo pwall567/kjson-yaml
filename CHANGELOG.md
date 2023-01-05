@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ## [Unreleased]
 ### Changed
 - `Parser`: added anchor and alias
+- `Parser`: added tag handling
 
 ## [1.10] - 2022-10-27
 ### Changed

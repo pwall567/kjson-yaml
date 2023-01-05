@@ -2,7 +2,7 @@
  * @(#) Line.kt
  *
  * kjson-yaml  Kotlin YAML processor
- * Copyright (c) 2020, 2021 Peter Wall
+ * Copyright (c) 2020, 2021, 2023 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,7 +35,7 @@ import net.pwall.text.TextMatcher
 class Line(val lineNumber: Int, line: String) : TextMatcher(line) {
 
     init {
-        skip { it == 0x20 }
+        skip { it == ' ' }
     }
 
     /**
@@ -73,10 +73,16 @@ class Line(val lineNumber: Int, line: String) : TextMatcher(line) {
         return false
     }
 
-    fun matchSpaces(): Boolean = match { isSpace(it.toChar()) }
+    fun matchSpace(): Boolean = match(' ') || match('\t')
+
+    fun matchSpaces(): Boolean = matchSeq { isSpace(it) }
 
     fun skipSpaces() {
-        skip { isSpace(it.toChar()) }
+        skip { isSpace(it) }
+    }
+
+    fun skipToSpace() {
+        skip { !isSpace(it) }
     }
 
     fun atEnd(): Boolean = isAtEnd || isComment()

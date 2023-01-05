@@ -2,7 +2,7 @@
  * @(#) YAMLDocument.kt
  *
  * kjson-yaml  Kotlin YAML processor
- * Copyright (c) 2020, 2021 Peter Wall
+ * Copyright (c) 2020, 2021, 2023 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,6 +34,8 @@ import io.kjson.JSONObject
 import io.kjson.JSONString
 import io.kjson.JSONValue
 import io.kjson.pointer.JSONPointer
+import io.kjson.pointer.contains
+import io.kjson.pointer.get
 
 /**
  * A YAML document - the result of a YAML parsing operation.
@@ -58,18 +60,21 @@ class YAMLDocument(
      */
     fun getTag(pointer: JSONPointer): String {
         tagMap[pointer]?.let { return it }
-        if (!pointer.existsIn(rootNode))
-            throw YAMLException("Node does not exist")
-        return when(pointer.find(rootNode)) {
-            null -> "tag:yaml.org,2002:null"
-            is JSONObject -> "tag:yaml.org,2002:map"
-            is JSONArray -> "tag:yaml.org,2002:seq"
-            is JSONString -> "tag:yaml.org,2002:str"
-            is JSONInt -> "tag:yaml.org,2002:int"
-            is JSONLong -> "tag:yaml.org,2002:int"
-            is JSONDecimal -> "tag:yaml.org,2002:float"
-            is JSONBoolean -> "tag:yaml.org,2002:bool"
+        rootNode?.let { root ->
+            if (pointer in root) {
+                return when(root[pointer]) {
+                    null -> "tag:yaml.org,2002:null"
+                    is JSONObject -> "tag:yaml.org,2002:map"
+                    is JSONArray -> "tag:yaml.org,2002:seq"
+                    is JSONString -> "tag:yaml.org,2002:str"
+                    is JSONInt -> "tag:yaml.org,2002:int"
+                    is JSONLong -> "tag:yaml.org,2002:int"
+                    is JSONDecimal -> "tag:yaml.org,2002:float"
+                    is JSONBoolean -> "tag:yaml.org,2002:bool"
+                }
+            }
         }
+        throw YAMLException("Node does not exist - $pointer")
     }
 
     companion object {

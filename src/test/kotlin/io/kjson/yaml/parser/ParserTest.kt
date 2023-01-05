@@ -2,7 +2,7 @@
  * @(#) ParserTest.kt
  *
  * kjson-yaml  Kotlin YAML processor
- * Copyright (c) 2020, 2021 Peter Wall
+ * Copyright (c) 2020, 2021, 2023 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -118,10 +118,25 @@ class ParserTest {
         expect(2) { result.minorVersion }
     }
 
+    @Test fun `should process file starting with YAML and TAG directives`() {
+        val file = File("src/test/resources/tag1.yaml")
+        val result = Parser().parse(file)
+        log.debug { result.rootNode?.toJSON() }
+        expect("abc") { result.rootNode.asString }
+    }
+
     @Test fun `should fail on YAML directive not 1 x`() {
         val file = File("src/test/resources/directive3.yaml")
-        val exception = assertFailsWith<YAMLException> { Parser().parse(file) }
-        expect("%YAML version must be 1.x at 1:10") { exception.message }
+        assertFailsWith<YAMLException> { Parser().parse(file) }.let {
+            expect("%YAML version must be 1.x at 1:10") { it.message }
+        }
+    }
+
+    @Test fun `should fail on invalid TAG handle`() {
+        val file = File("src/test/resources/tag99.yaml")
+        assertFailsWith<YAMLException> { Parser().parse(file) }.let {
+            expect("Illegal tag handle on %TAG directive at 2:6") { it.message }
+        }
     }
 
     @Test fun `should process plain scalar`() {
@@ -543,6 +558,76 @@ class ParserTest {
         log.info { result.rootNode?.toJSON() }
         val rootNode = result.rootNode ?: fail("Result is null")
         expect("ccc:\n\nddd:") { JSONPointer.find("/aaa/bbb", rootNode).asString }
+    }
+
+    @Test fun `should process shorthand tag`() {
+        val file = File("src/test/resources/tag2.yaml")
+        val result = Parser().parse(file)
+        log.debug { result.rootNode?.toJSON() }
+        expect("abc") { result.rootNode.asString }
+        expect("tag:kjson.io,2022:aaa") { result.getTag(JSONPointer.root) }
+    }
+
+    @Test fun `should process shorthand tags in array`() {
+        val file = File("src/test/resources/tag3.yaml")
+        val result = Parser().parse(file)
+        log.debug { result.rootNode?.toJSON() }
+        expect("abc") { result.rootNode.asArray[0].asString }
+        expect("tag:kjson.io,2022:aaa") { result.getTag(JSONPointer("/0")) }
+        expect("def") { result.rootNode.asArray[1].asString }
+        expect("tag:kjson.io,2022:bbb") { result.getTag(JSONPointer("/1")) }
+        expect("ghi") { result.rootNode.asArray[2].asString }
+        expect("tag:kjson.io,2022:ccc") { result.getTag(JSONPointer("/2")) }
+    }
+
+    @Test fun `should process shorthand tags with secondary handle`() {
+        val file = File("src/test/resources/tag4.yaml")
+        val result = Parser().parse(file)
+        log.debug { result.rootNode?.toJSON() }
+        expect("abc") { result.rootNode.asArray[0].asString }
+        expect("tag:kjson.io,2022:aaa") { result.getTag(JSONPointer("/0")) }
+        expect("def") { result.rootNode.asArray[1].asString }
+        expect("tag:kjson.io,2022:bbb") { result.getTag(JSONPointer("/1")) }
+        expect("ghi") { result.rootNode.asArray[2].asString }
+        expect("tag:kjson.io,2022:ccc") { result.getTag(JSONPointer("/2")) }
+    }
+
+    @Test fun `should process shorthand tags with primary handle`() {
+        val file = File("src/test/resources/tag5.yaml")
+        val result = Parser().parse(file)
+        log.debug { result.rootNode?.toJSON() }
+        expect("abc") { result.rootNode.asArray[0].asString }
+        expect("tag:kjson.io,2022:aaa") { result.getTag(JSONPointer("/0")) }
+        expect("def") { result.rootNode.asArray[1].asString }
+        expect("tag:kjson.io,2022:bbb") { result.getTag(JSONPointer("/1")) }
+        expect("ghi") { result.rootNode.asArray[2].asString }
+        expect("tag:kjson.io,2022:ccc") { result.getTag(JSONPointer("/2")) }
+    }
+
+    @Test fun `should process shorthand tags with default secondary handle`() {
+        val file = File("src/test/resources/tag6.yaml")
+        val result = Parser().parse(file)
+        log.debug { result.rootNode?.toJSON() }
+        expect("tag:yaml.org,2002:seq") { result.getTag(JSONPointer.root) }
+        expect("abc") { result.rootNode.asArray[0].asString }
+        expect("tag:yaml.org,2002:aaa") { result.getTag(JSONPointer("/0")) }
+        expect("def") { result.rootNode.asArray[1].asString }
+        expect("tag:yaml.org,2002:bbb") { result.getTag(JSONPointer("/1")) }
+        expect("ghi") { result.rootNode.asArray[2].asString }
+        expect("tag:yaml.org,2002:ccc") { result.getTag(JSONPointer("/2")) }
+    }
+
+    @Test fun `should process verbatim tags`() {
+        val file = File("src/test/resources/tag7.yaml")
+        val result = Parser().parse(file)
+        log.debug { result.rootNode?.toJSON() }
+        expect("tag:yaml.org,2002:seq") { result.getTag(JSONPointer.root) }
+        expect("abc") { result.rootNode.asArray[0].asString }
+        expect("tag:kjson.io,2023:extra") { result.getTag(JSONPointer("/0")) }
+        expect("def") { result.rootNode.asArray[1].asString }
+        expect("!local") { result.getTag(JSONPointer("/1")) }
+        expect("ghi") { result.rootNode.asArray[2].asString }
+        expect("tag:yaml.org,2002:str") { result.getTag(JSONPointer("/2")) }
     }
 
     @Test fun `should process example JSON schema`() {

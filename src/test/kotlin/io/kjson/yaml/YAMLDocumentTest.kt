@@ -2,7 +2,7 @@
  * @(#) YAMLDocumentTest.kt
  *
  * kjson-yaml  Kotlin YAML processor
- * Copyright (c) 2020, 2021 Peter Wall
+ * Copyright (c) 2020, 2021, 2023 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,7 @@
 package io.kjson.yaml
 
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 import kotlin.test.expect
 
 import java.io.File
@@ -52,6 +53,13 @@ class YAMLDocumentTest {
         expect("tag:yaml.org,2002:null") { document.getTag(JSONPointer("/empty")) }
         expect("tag:yaml.org,2002:seq") { document.getTag(JSONPointer("/array")) }
         expect("tag:yaml.org,2002:map") { document.getTag(JSONPointer("/object")) }
+    }
+
+    @Test fun `should throw exception getting tag for unknown node`() {
+        val document = YAML.parse(File("src/test/resources/alltypes.yaml"))
+        assertFailsWith<YAMLException> { document.getTag(JSONPointer("/rubbish")) }.let {
+            expect("Node does not exist - /rubbish") { it.message }
+        }
     }
 
 }
