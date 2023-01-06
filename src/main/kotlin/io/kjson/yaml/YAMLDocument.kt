@@ -36,6 +36,13 @@ import io.kjson.JSONValue
 import io.kjson.pointer.JSONPointer
 import io.kjson.pointer.contains
 import io.kjson.pointer.get
+import io.kjson.yaml.YAML.boolTag
+import io.kjson.yaml.YAML.floatTag
+import io.kjson.yaml.YAML.intTag
+import io.kjson.yaml.YAML.mapTag
+import io.kjson.yaml.YAML.nullTag
+import io.kjson.yaml.YAML.seqTag
+import io.kjson.yaml.YAML.strTag
 
 /**
  * A YAML document - the result of a YAML parsing operation.
@@ -63,14 +70,14 @@ class YAMLDocument(
         rootNode?.let { root ->
             if (pointer in root) {
                 return when(root[pointer]) {
-                    null -> "tag:yaml.org,2002:null"
-                    is JSONObject -> "tag:yaml.org,2002:map"
-                    is JSONArray -> "tag:yaml.org,2002:seq"
-                    is JSONString -> "tag:yaml.org,2002:str"
-                    is JSONInt -> "tag:yaml.org,2002:int"
-                    is JSONLong -> "tag:yaml.org,2002:int"
-                    is JSONDecimal -> "tag:yaml.org,2002:float"
-                    is JSONBoolean -> "tag:yaml.org,2002:bool"
+                    null -> nullTag
+                    is JSONObject -> mapTag
+                    is JSONArray -> seqTag
+                    is JSONString -> strTag
+                    is JSONInt -> intTag
+                    is JSONLong -> intTag
+                    is JSONDecimal -> floatTag
+                    is JSONBoolean -> boolTag
                 }
             }
         }

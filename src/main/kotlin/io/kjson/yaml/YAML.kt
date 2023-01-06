@@ -2,7 +2,7 @@
  * @(#) YAML.kt
  *
  * kjson-yaml  Kotlin YAML processor
- * Copyright (c) 2020, 2021 Peter Wall
+ * Copyright (c) 2020, 2021, 2023 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,6 +39,15 @@ import io.kjson.yaml.parser.Parser
  */
 object YAML {
 
+    const val tagPrefix = "tag:yaml.org,2002:"
+    const val nullTag = "tag:yaml.org,2002:null"
+    const val mapTag = "tag:yaml.org,2002:map"
+    const val seqTag = "tag:yaml.org,2002:seq"
+    const val strTag = "tag:yaml.org,2002:str"
+    const val intTag = "tag:yaml.org,2002:int"
+    const val floatTag = "tag:yaml.org,2002:float"
+    const val boolTag = "tag:yaml.org,2002:bool"
+
     val parser = Parser()
 
     /**
@@ -48,7 +57,7 @@ object YAML {
      * @param   charset     the [Charset], or `null` to specify that the charset is to be determined dynamically
      * @return              a [YAMLDocument]
      */
-    fun parse(file: File, charset: Charset? = null) = parser.parse(file, charset)
+    fun parse(file: File, charset: Charset? = null): YAMLDocument = parser.parse(file, charset)
 
     /**
      * Parse an [InputStream] as YAML.
@@ -57,7 +66,7 @@ object YAML {
      * @param   charset     the [Charset], or `null` to specify that the charset is to be determined dynamically
      * @return              a [YAMLDocument]
      */
-    fun parse(inputStream: InputStream, charset: Charset? = null) = parser.parse(inputStream, charset)
+    fun parse(inputStream: InputStream, charset: Charset? = null): YAMLDocument = parser.parse(inputStream, charset)
 
     /**
      * Parse a [Reader] as YAML.
@@ -65,6 +74,6 @@ object YAML {
      * @param   reader      the input [Reader]
      * @return              a [YAMLDocument]
      */
-    fun parse(reader: Reader) = parser.parse(reader)
+    fun parse(reader: Reader): YAMLDocument = parser.parse(reader)
 
 }

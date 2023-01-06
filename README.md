@@ -30,6 +30,21 @@ For example, to retrieve the `description` property of the `info` section of an 
     val description = yamlDocument.rootNode[pointer]
 ```
 
+## Tags
+
+Because YAML tags do not form part of the JSON structure, any tags present in the YAML are stored in a separate map,
+accessed by the `JSONPointer` pointing to the node.
+The function `getTag()` on the `YAMLDocument` will return the tag for the nominated node, or the default tag for the
+node type if no tag was specified.
+
+For example, following the above code to get the `description` node of an OpenAPI file, the tag for that node may be
+retrieved using:
+```kotlin
+    val tag = yamlDocument.getTag(pointer)
+```
+
+Unless the tag was explicitly overridden, this will return `tag:yaml.org,2002:str` (the default tag for a string node).
+
 ## Implemented Subset
 
 This parser does not implement the full [YAML specification](https://yaml.org/spec/1.2/spec.html).
@@ -50,7 +65,6 @@ The currently implemented subset includes:
 Not yet implemented:
 
 - Multiple documents in a single file
-- Named floating-point pseudo-values (`.inf`, `.nan`)
 
 Also, the parser may not yet meet the specification in all respects, even for the constructs that it does handle.
 

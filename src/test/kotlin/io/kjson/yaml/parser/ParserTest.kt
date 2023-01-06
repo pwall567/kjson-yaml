@@ -41,7 +41,13 @@ import io.kjson.JSON.asDecimal
 import io.kjson.JSON.asInt
 import io.kjson.JSON.asObject
 import io.kjson.JSON.asString
+import io.kjson.JSONDecimal
+import io.kjson.JSONInt
+import io.kjson.JSONString
 import io.kjson.pointer.JSONPointer
+import io.kjson.yaml.YAML.floatTag
+import io.kjson.yaml.YAML.seqTag
+import io.kjson.yaml.YAML.strTag
 import io.kjson.yaml.YAMLException
 import net.pwall.json.JSONSimple
 import net.pwall.log.getLogger
@@ -123,6 +129,7 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         expect("abc") { result.rootNode.asString }
+        expect(strTag) { result.getTag(JSONPointer.root) }
     }
 
     @Test fun `should fail on YAML directive not 1 x`() {
@@ -608,7 +615,7 @@ class ParserTest {
         val file = File("src/test/resources/tag6.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect("tag:yaml.org,2002:seq") { result.getTag(JSONPointer.root) }
+        expect(seqTag) { result.getTag(JSONPointer.root) }
         expect("abc") { result.rootNode.asArray[0].asString }
         expect("tag:yaml.org,2002:aaa") { result.getTag(JSONPointer("/0")) }
         expect("def") { result.rootNode.asArray[1].asString }
@@ -617,17 +624,77 @@ class ParserTest {
         expect("tag:yaml.org,2002:ccc") { result.getTag(JSONPointer("/2")) }
     }
 
+    @Test fun `should process shorthand tags with default primary handle`() {
+        val file = File("src/test/resources/tag6a.yaml")
+        val result = Parser().parse(file)
+        log.debug { result.rootNode?.toJSON() }
+        expect(seqTag) { result.getTag(JSONPointer.root) }
+        expect("abc") { result.rootNode.asArray[0].asString }
+        expect("!aaa") { result.getTag(JSONPointer("/0")) }
+        expect("def") { result.rootNode.asArray[1].asString }
+        expect("!bbb") { result.getTag(JSONPointer("/1")) }
+        expect("ghi") { result.rootNode.asArray[2].asString }
+        expect("!ccc") { result.getTag(JSONPointer("/2")) }
+    }
+
     @Test fun `should process verbatim tags`() {
         val file = File("src/test/resources/tag7.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect("tag:yaml.org,2002:seq") { result.getTag(JSONPointer.root) }
+        expect(seqTag) { result.getTag(JSONPointer.root) }
         expect("abc") { result.rootNode.asArray[0].asString }
         expect("tag:kjson.io,2023:extra") { result.getTag(JSONPointer("/0")) }
         expect("def") { result.rootNode.asArray[1].asString }
         expect("!local") { result.getTag(JSONPointer("/1")) }
         expect("ghi") { result.rootNode.asArray[2].asString }
-        expect("tag:yaml.org,2002:str") { result.getTag(JSONPointer("/2")) }
+        expect(strTag) { result.getTag(JSONPointer("/2")) }
+    }
+
+    @Test fun `should use tag to determine string data type`() {
+        val file = File("src/test/resources/tag8.yaml")
+        val result = Parser().parse(file)
+        log.debug { result.rootNode?.toJSON() }
+        expect(seqTag) { result.getTag(JSONPointer.root) }
+        expect(JSONInt(123)) { result.rootNode.asArray[0] }
+        expect(JSONString("456")) { result.rootNode.asArray[1] }
+        expect(JSONInt(789)) { result.rootNode.asArray[2] }
+    }
+
+    @Test fun `should use tag to determine int or float data type`() {
+        val file = File("src/test/resources/tag9.yaml")
+        val result = Parser().parse(file)
+        log.debug { result.rootNode?.toJSON() }
+        expect(seqTag) { result.getTag(JSONPointer.root) }
+        expect(JSONInt(123)) { result.rootNode.asArray[0] }
+        expect(JSONDecimal("456")) { result.rootNode.asArray[1] }
+        expect(JSONDecimal("789")) { result.rootNode.asArray[2] }
+        expect(JSONInt(987)) { result.rootNode.asArray[3] }
+    }
+
+    @Test fun `should add float tag for floating point constants`() {
+        val file = File("src/test/resources/tag10.yaml")
+        val result = Parser().parse(file)
+        log.debug { result.rootNode?.toJSON() }
+        expect(seqTag) { result.getTag(JSONPointer.root) }
+        expect(JSONString("abc")) { result.rootNode.asArray[0] }
+        expect(strTag) { result.getTag(JSONPointer("/0")) }
+        expect(JSONString(".nan")) { result.rootNode.asArray[1] }
+        expect(floatTag) { result.getTag(JSONPointer("/1")) }
+        expect(JSONString("-.Inf")) { result.rootNode.asArray[2] }
+        expect(floatTag) { result.getTag(JSONPointer("/2")) }
+        expect(JSONString(".nan")) { result.rootNode.asArray[3] }
+        expect("tag:yaml.org,2002:xxx") { result.getTag(JSONPointer("/3")) }
+    }
+
+    @Test fun `should add decode percent encoding in tag suffix`() {
+        val file = File("src/test/resources/tag11.yaml")
+        val result = Parser().parse(file)
+        log.debug { result.rootNode?.toJSON() }
+        expect(seqTag) { result.getTag(JSONPointer.root) }
+        expect(JSONString("abc")) { result.rootNode.asArray[0] }
+        expect(strTag) { result.getTag(JSONPointer("/0")) }
+        expect(JSONString("def")) { result.rootNode.asArray[1] }
+        expect("tag:yaml.org,2002:a!") { result.getTag(JSONPointer("/1")) }
     }
 
     @Test fun `should process example JSON schema`() {

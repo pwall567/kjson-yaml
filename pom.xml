@@ -62,17 +62,22 @@
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>kjson-core</artifactId>
-      <version>5.0</version>
+      <version>5.3</version>
     </dependency>
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>kjson-pointer</artifactId>
-      <version>3.0</version>
+      <version>4.1</version>
     </dependency>
     <dependency>
       <groupId>net.pwall.text</groupId>
       <artifactId>textmatcher</artifactId>
       <version>2.3</version>
+    </dependency>
+    <dependency>
+      <groupId>net.pwall.text</groupId>
+      <artifactId>string-mapper</artifactId>
+      <version>2.0</version>
     </dependency>
     <dependency>
       <groupId>net.pwall.util</groupId>
