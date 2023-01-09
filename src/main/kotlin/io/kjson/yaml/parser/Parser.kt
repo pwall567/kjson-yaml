@@ -111,7 +111,13 @@ class Parser {
                             warn("Unrecognised directive ignored - $text")
                             state = State.DIRECTIVE
                         }
-                        text.startsWith("---") -> state = State.MAIN
+                        text.startsWith("---") -> {
+                            state = State.MAIN
+                            line.skipFixed(3)
+                            line.skipSpaces()
+                            if (!line.atEnd())
+                                outerBlock.processLine(line)
+                        }
                         text.startsWith("...") -> state = State.ENDED
                         !line.atEnd() -> {
                             state = State.MAIN
@@ -195,7 +201,13 @@ class Parser {
                             warn("Unrecognised directive ignored - $text")
                             state = State.DIRECTIVE
                         }
-                        text.startsWith("---") -> state = State.MAIN
+                        text.startsWith("---") -> {
+                            state = State.MAIN
+                            line.skipFixed(3)
+                            line.skipSpaces()
+                            if (!line.atEnd())
+                                outerBlock.processLine(line)
+                        }
                         text.startsWith("...") -> result.add(YAMLDocument(null))
                         !line.atEnd() -> {
                             state = State.MAIN
