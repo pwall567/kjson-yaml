@@ -43,6 +43,7 @@ import io.kjson.JSON.asInt
 import io.kjson.JSON.asObject
 import io.kjson.JSON.asString
 import io.kjson.JSONArray
+import io.kjson.JSONBoolean
 import io.kjson.JSONDecimal
 import io.kjson.JSONInt
 import io.kjson.JSONObject
@@ -156,6 +157,30 @@ class ParserTest {
         expect("abc") { result.rootNode.asString }
         expect(1) { result.majorVersion }
         expect(1) { result.minorVersion }
+    }
+
+    @Test fun `should process YAML 1 1 file allowing old constant types`() {
+        val file = File("src/test/resources/yaml11.yaml")
+        val result = Parser().parse(file)
+        log.debug { result.rootNode?.toJSON() }
+        with(result.rootNode) {
+            assertIs<JSONArray>(this)
+            expect(JSONBoolean.TRUE) { this[0] }
+            expect(JSONBoolean.FALSE) { this[1] }
+            expect(JSONInt(511)) { this[2] }
+        }
+    }
+
+    @Test fun `should process YAML 1 2 file ignoring old constant types`() {
+        val file = File("src/test/resources/yaml12.yaml")
+        val result = Parser().parse(file)
+        log.debug { result.rootNode?.toJSON() }
+        with(result.rootNode) {
+            assertIs<JSONArray>(this)
+            expect(JSONString("Yes")) { this[0] }
+            expect(JSONString("No")) { this[1] }
+            expect(JSONInt(777)) { this[2] }
+        }
     }
 
     @Test fun `should process file starting with YAML directive with comment`() {

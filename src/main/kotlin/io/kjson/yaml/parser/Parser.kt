@@ -975,17 +975,28 @@ class Parser {
                 if (it == intTag && !text.matchesInteger() && text.matchesDecimal() && JSONDecimal(text).isIntegral())
                     return intOrLong(BigDecimal(text).toLong())
             }
+            context.version?.let {
+                if (it.second < 2) {
+                    if (text == "yes" || text == "Yes" || text == "YES" || text == "on" || text == "On" || text == "ON")
+                        return JSONBoolean.TRUE
+                    if (text == "no" || text == "No" || text == "NO" || text == "off" || text == "Off" || text == "OFF")
+                        return JSONBoolean.FALSE
+                    if (text.length > 1 && text.startsWith('0') && text.drop(1).all { d -> d in '0'..'7' })
+                        return intOrLong(text.toLong(8))
+                }
+            }
             if (text.isEmpty() || text == "null" || text == "Null" || text == "NULL" || text == "~")
                 return null
             if (text == "true" || text == "True" || text == "TRUE")
                 return JSONBoolean.TRUE
             if (text == "false" || text == "False" || text == "FALSE")
                 return JSONBoolean.FALSE
-            if (text.startsWith("0o") && text.length > 2 && text.drop(2).all { it in '0'..'7' })
-                return intOrLong(text.drop(2).toLong(8))
-            if (text.startsWith("0x") && text.length > 2 &&
-                    text.drop(2).all { it in '0'..'9' || it in 'A'..'F' || it in 'a'..'f' })
-                return intOrLong(text.drop(2).toLong(16))
+            if (text.length > 2) {
+                if (text.startsWith("0o") && text.drop(2).all { it in '0'..'7' })
+                    return intOrLong(text.drop(2).toLong(8))
+                if (text.startsWith("0x") && text.drop(2).all { it in '0'..'9' || it in 'A'..'F' || it in 'a'..'f' })
+                    return intOrLong(text.drop(2).toLong(16))
+            }
             if (text.matchesInteger())
                 return intOrLong(text.toLong())
             if (text.matchesDecimal())
