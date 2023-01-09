@@ -165,9 +165,11 @@ class ParserTest {
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
             assertIs<JSONArray>(this)
+            expect(4) { size }
             expect(JSONBoolean.TRUE) { this[0] }
             expect(JSONBoolean.FALSE) { this[1] }
             expect(JSONInt(511)) { this[2] }
+            expect(JSONString("Yes")) { this[3] }
         }
     }
 
@@ -177,9 +179,11 @@ class ParserTest {
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
             assertIs<JSONArray>(this)
+            expect(4) { size }
             expect(JSONString("Yes")) { this[0] }
             expect(JSONString("No")) { this[1] }
             expect(JSONInt(777)) { this[2] }
+            expect(JSONString("Yes")) { this[3] }
         }
     }
 
