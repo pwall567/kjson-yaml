@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Changed
 - `Parser`: added anchor and alias
 - `Parser`: added tag handling
+- `Parser`: added `parseStream()` (multiple documents in stream)
+- `pom.xml`: updated dependency versions
 
 ## [1.10] - 2022-10-27
 ### Changed

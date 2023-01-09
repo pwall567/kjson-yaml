@@ -51,7 +51,7 @@ import io.kjson.yaml.YAML.strTag
  */
 class YAMLDocument(
     val rootNode: JSONValue?,
-    private val tagMap: Map<JSONPointer, String>,
+    internal val tagMap: Map<JSONPointer, String>,
     val majorVersion: Int,
     val minorVersion: Int
 ) {

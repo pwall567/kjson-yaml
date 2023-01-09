@@ -1,0 +1,8 @@
+%YAML 1.2
+%TAG !t1! tag:kjson.io,2022:
+---
+!t1!a abc
+...
+%YAML 1.2
+---
+!t1!b def

@@ -27,6 +27,7 @@ package io.kjson.yaml.parser
 
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.expect
@@ -41,11 +42,14 @@ import io.kjson.JSON.asDecimal
 import io.kjson.JSON.asInt
 import io.kjson.JSON.asObject
 import io.kjson.JSON.asString
+import io.kjson.JSONArray
 import io.kjson.JSONDecimal
 import io.kjson.JSONInt
+import io.kjson.JSONObject
 import io.kjson.JSONString
 import io.kjson.pointer.JSONPointer
 import io.kjson.yaml.YAML.floatTag
+import io.kjson.yaml.YAML.intTag
 import io.kjson.yaml.YAML.seqTag
 import io.kjson.yaml.YAML.strTag
 import io.kjson.yaml.YAMLException
@@ -60,16 +64,37 @@ class ParserTest {
         expect(null) { result.rootNode }
     }
 
-    @Test fun `should return null document for empty file as InputStream`() {
+    @Test fun `should return single null document for empty file as multi-document stream`() {
+        val emptyFile = File("src/test/resources/empty.yaml")
+        val result = Parser().parseStream(emptyFile)
+        expect(1) { result.size }
+        expect(null) { result[0].rootNode }
+    }
+
+    @Test fun `should return null document for empty file using InputStream`() {
         val inputStream = File("src/test/resources/empty.yaml").inputStream()
         val result = Parser().parse(inputStream)
         expect(null) { result.rootNode }
     }
 
-    @Test fun `should return null document for empty file as Reader`() {
+    @Test fun `should return single null document for empty file as multi-document stream using InputStream`() {
+        val inputStream = File("src/test/resources/empty.yaml").inputStream()
+        val result = Parser().parseStream(inputStream)
+        expect(1) { result.size }
+        expect(null) { result[0].rootNode }
+    }
+
+    @Test fun `should return null document for empty file using Reader`() {
         val reader = File("src/test/resources/empty.yaml").reader()
         val result = Parser().parse(reader)
         expect(null) { result.rootNode }
+    }
+
+    @Test fun `should return single null document for empty file as multi-document stream using Reader`() {
+        val reader = File("src/test/resources/empty.yaml").reader()
+        val result = Parser().parseStream(reader)
+        expect(1) { result.size }
+        expect(null) { result[0].rootNode }
     }
 
     @Test fun `should process file starting with separator`() {
@@ -79,6 +104,14 @@ class ParserTest {
         expect("abc") { result.rootNode.asString }
     }
 
+    @Test fun `should process file starting with separator as multi-document stream`() {
+        val file = File("src/test/resources/separator1.yaml")
+        val result = Parser().parseStream(file)
+        expect(1) { result.size }
+        log.debug { result[0].rootNode?.toJSON() }
+        expect("abc") { result[0].rootNode.asString }
+    }
+
     @Test fun `should process file starting with separator and ending with terminator`() {
         val file = File("src/test/resources/separator2.yaml")
         val result = Parser().parse(file)
@@ -86,6 +119,16 @@ class ParserTest {
         expect("abc") { result.rootNode.asString }
         expect(1) { result.majorVersion }
         expect(2) { result.minorVersion }
+    }
+
+    @Test fun `should process file starting with separator and ending with terminator as multi-document stream`() {
+        val file = File("src/test/resources/separator2.yaml")
+        val result = Parser().parseStream(file)
+        expect(1) { result.size }
+        log.debug { result[0].rootNode?.toJSON() }
+        expect("abc") { result[0].rootNode.asString }
+        expect(1) { result[0].majorVersion }
+        expect(2) { result[0].minorVersion }
     }
 
     @Test fun `should process file starting with separator with comment`() {
@@ -695,6 +738,89 @@ class ParserTest {
         expect(strTag) { result.getTag(JSONPointer("/0")) }
         expect(JSONString("def")) { result.rootNode.asArray[1] }
         expect("tag:yaml.org,2002:a!") { result.getTag(JSONPointer("/1")) }
+    }
+
+    @Test fun `should process object with multiple tags`() {
+        val file = File("src/test/resources/tag20.yaml")
+        val result = Parser().parse(file)
+        log.debug { result.rootNode?.toJSON() }
+        for ((ptr, tag) in result.tagMap)
+            log.debug { "Tag: [$ptr] -> $tag" }
+        expect("tag:kjson.io,2023:aaa.bbb.ccc") { result.getTag(JSONPointer.root) }
+        with(result.rootNode.asObject) {
+            expect(1) { size }
+            with(this["outer"]) {
+                assertIs<JSONObject>(this)
+                expect(4) { size }
+                with(this["array1"]) {
+                    assertIs<JSONArray>(this)
+                    expect(2) { size }
+                    expect(JSONString("first")) { this[0] }
+                    expect("tag:example.com,2023:no") { result.getTag(JSONPointer("/outer/array1/0"))}
+                    expect(JSONString("second")) { this[1] }
+                    expect("tag:kjson.io,2023:xxx") { result.getTag(JSONPointer("/outer/array1/1"))}
+                }
+                with(this["array2"]) {
+                    assertIs<JSONArray>(this)
+                    expect(3) { size }
+                    expect(JSONString("alpha")) { this[0] }
+                    expect("tag:kjson.io,2023:aaa") { result.getTag(JSONPointer("/outer/array2/0"))}
+                    expect(JSONString("beta")) { this[1] }
+                    expect("tag:example.com,2023:bbb") { result.getTag(JSONPointer("/outer/array2/1"))}
+                    expect(JSONString("gamma")) { this[2] }
+                    expect(strTag) { result.getTag(JSONPointer("/outer/array2/2"))}
+                }
+                expect("!temp") { result.getTag(JSONPointer("/outer/array2")) }
+                expect(JSONString("abc")) { this["inner"] }
+                expect("tag:nowhere.io,2023:extra") { result.getTag(JSONPointer("/outer/inner")) }
+                with(this["obj1"]) {
+                    assertIs<JSONObject>(this)
+                    expect(2) { size }
+                    expect(JSONInt(123)) { this["f1"] }
+                    expect("tag:kjson.io,2023:yyy") { result.getTag(JSONPointer("/outer/obj1/f1")) }
+                    expect(JSONInt(456)) { this["f2"] }
+                    expect(intTag) { result.getTag(JSONPointer("/outer/obj1/f2")) }
+                }
+                expect("tag:kjson.io,2023:zzz") { result.getTag(JSONPointer("/outer/obj1")) }
+            }
+        }
+    }
+
+    @Test fun `should process multi-document stream`() {
+        val file = File("src/test/resources/multi1.yaml")
+        val result = Parser().parseStream(file)
+        expect(2) { result.size }
+        log.debug { result[0].rootNode?.toJSON() }
+        expect("abc") { result[0].rootNode.asString }
+        log.debug { result[1].rootNode?.toJSON() }
+        expect("def") { result[1].rootNode.asString }
+    }
+
+    @Test fun `should process multi-document stream using terminator`() {
+        val file = File("src/test/resources/multi2.yaml")
+        val result = Parser().parseStream(file)
+        expect(2) { result.size }
+        log.debug { result[0].rootNode?.toJSON() }
+        expect("abc") { result[0].rootNode.asString }
+        log.debug { result[1].rootNode?.toJSON() }
+        expect("def") { result[1].rootNode.asString }
+    }
+
+    @Test fun `should process multi-document stream using terminator and directives`() {
+        val file = File("src/test/resources/multi3.yaml")
+        val result = Parser().parseStream(file)
+        expect(2) { result.size }
+        log.debug { result[0].rootNode?.toJSON() }
+        expect("abc") { result[0].rootNode.asString }
+        log.debug { result[1].rootNode?.toJSON() }
+        expect("def") { result[1].rootNode.asString }
+    }
+
+    @Test fun `should throw exception when using tag from previous document`() {
+        val file = File("src/test/resources/multi4.yaml")
+        assertFailsWith<YAMLParseException> { Parser().parseStream(file) }.let {
+            expect("Tag handle !t1! not declared at 8:5") { it.message }
+        }
     }
 
     @Test fun `should process example JSON schema`() {

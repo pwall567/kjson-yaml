@@ -1,0 +1,12 @@
+%YAML 1.2
+%TAG !! tag:kjson.io,2023:
+%TAG !t1! tag:example.com,2023:
+---
+!!aaa.bbb.ccc
+outer:
+  array1:
+    - !t1!no first
+    - !!xxx second
+  array2: !temp [ !!aaa alpha, !t1!bbb beta, gamma ]
+  inner: !<tag:nowhere.io,2023:extra> abc
+  obj1: !!zzz { f1: !!yyy 123, f2: 456 }

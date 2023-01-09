@@ -91,7 +91,6 @@ class Parser {
      */
     fun parse(reader: Reader): YAMLDocument {
         var state = State.INITIAL
-        var version: Pair<Int, Int>? = null
         val context = Context()
         val outerBlock = InitialBlock(context, 0)
         var lineNumber = 0
@@ -101,7 +100,7 @@ class Parser {
                 State.INITIAL -> {
                     when {
                         text.startsWith("%YAML") -> {
-                            version = processYAMLDirective(line)
+                            context.version = processYAMLDirective(line)
                             state = State.DIRECTIVE
                         }
                         text.startsWith("%TAG") -> {
@@ -145,6 +144,108 @@ class Parser {
             }
         }
         val rootNode = outerBlock.conclude(Line(lineNumber, ""))
+        return createYAMLDocument(rootNode, context)
+    }
+
+    /**
+     * Parse a [File] as a multi-document YAML stream.
+     *
+     * @param   file        the input [File]
+     * @param   charset     the [Charset], or `null` to specify that the charset is to be determined dynamically
+     * @return              a [List] of [YAMLDocument]s
+     */
+    fun parseStream(file: File, charset: Charset? = null) = parseStream(file.inputStream(), charset)
+
+    /**
+     * Parse an [InputStream] as a multi-document YAML stream.
+     *
+     * @param   inputStream the input [InputStream]
+     * @param   charset     the [Charset], or `null` to specify that the charset is to be determined dynamically
+     * @return              a [List] of [YAMLDocument]s
+     */
+    fun parseStream(inputStream: InputStream, charset: Charset? = null) =
+            parseStream(DynamicReader(inputStream).apply { charset?.let { this.switchTo(it) } })
+
+    /**
+     * Parse a [Reader] as a multi-document YAML stream.
+     *
+     * @param   reader      the input [Reader]
+     * @return              a [List] of [YAMLDocument]s
+     */
+    fun parseStream(reader: Reader): List<YAMLDocument> {
+        var state = State.INITIAL
+        var context = Context()
+        var outerBlock = InitialBlock(context, 0)
+        var lineNumber = 0
+        val result = mutableListOf<YAMLDocument>()
+        reader.forEachLine { text ->
+            val line = Line(++lineNumber, text)
+            when (state) {
+                State.INITIAL -> {
+                    when {
+                        text.startsWith("%YAML") -> {
+                            context.version = processYAMLDirective(line)
+                            state = State.DIRECTIVE
+                        }
+                        text.startsWith("%TAG") -> {
+                            processTAGDirective(context, line)
+                            state = State.DIRECTIVE
+                        }
+                        text.startsWith('%') -> {
+                            warn("Unrecognised directive ignored - $text")
+                            state = State.DIRECTIVE
+                        }
+                        text.startsWith("---") -> state = State.MAIN
+                        text.startsWith("...") -> result.add(YAMLDocument(null))
+                        !line.atEnd() -> {
+                            state = State.MAIN
+                            outerBlock.processLine(line)
+                        }
+                    }
+                }
+                State.DIRECTIVE -> {
+                    when {
+                        text.startsWith("%YAML") -> fatal("Duplicate or misplaced %YAML directive", line)
+                        text.startsWith("%TAG") -> processTAGDirective(context, line)
+                        text.startsWith('%') -> warn("Unrecognised directive ignored - $text")
+                        text.startsWith("---") -> state = State.MAIN
+                        text.startsWith("...") -> {
+                            result.add(createYAMLDocument(null, context))
+                            state = State.INITIAL
+                        }
+                        !line.atEnd() -> fatal("Illegal data following directive(s)", line)
+                    }
+                }
+                State.MAIN -> {
+                    when {
+                        text.startsWith("...") -> {
+                            result.add(createYAMLDocument(outerBlock.conclude(line), context))
+                            context = Context()
+                            outerBlock = InitialBlock(context, 0)
+                            state = State.INITIAL
+                        }
+                        text.startsWith("---") -> {
+                            result.add(createYAMLDocument(outerBlock.conclude(line), context))
+                            context = Context()
+                            outerBlock = InitialBlock(context, 0)
+                            state = State.MAIN
+                        }
+                        line.atEnd() -> outerBlock.processBlankLine(line)
+                        else -> outerBlock.processLine(line)
+                    }
+                }
+                State.ENDED -> {
+                    if (text.trim().isNotEmpty())
+                        fatal("Non-blank lines after end of document", line)
+                }
+            }
+        }
+        if (state != State.INITIAL || result.isEmpty())
+            result.add(createYAMLDocument(outerBlock.conclude(Line(lineNumber, "")), context))
+        return result
+    }
+
+    private fun createYAMLDocument(rootNode: JSONValue?, context: Context): YAMLDocument {
         log.debug {
             val type = when (rootNode) {
                 null -> "null"
@@ -152,8 +253,10 @@ class Parser {
             }
             "Parse complete; result is $type"
         }
-        return version?.let { YAMLDocument(rootNode, context.tagMap, it.first, it.second) } ?:
-                YAMLDocument(rootNode, context.tagMap)
+        context.version?.let {
+            return YAMLDocument(rootNode, context.tagMap, it.first, it.second)
+        }
+        return YAMLDocument(rootNode, context.tagMap)
     }
 
     private fun processYAMLDirective(line: Line): Pair<Int, Int> {
@@ -213,6 +316,7 @@ class Parser {
     }
 
     class Context(
+        var version: Pair<Int, Int>? = null,
         val tagHandles: MutableMap<String, String> = mutableMapOf(),
         val anchorMap: MutableMap<String, JSONValue> = mutableMapOf(),
         val tagMap: MutableMap<JSONPointer, String> = mutableMapOf(),
@@ -239,14 +343,21 @@ class Parser {
             }
         }
 
-        fun resetNodeProperties() {
-            anchor = null
-            tag = null
-        }
+        fun child(name: String) = Context(
+            version = version,
+            tagHandles = tagHandles,
+            anchorMap = anchorMap,
+            tagMap = tagMap,
+            pointer = pointer.child(name),
+        )
 
-        fun child(name: String) = Context(tagHandles, anchorMap, tagMap, pointer.child(name))
-
-        fun child(index: Int) = Context(tagHandles, anchorMap, tagMap, pointer.child(index))
+        fun child(index: Int) = Context(
+            version = version,
+            tagHandles = tagHandles,
+            anchorMap = anchorMap,
+            tagMap = tagMap,
+            pointer = pointer.child(index),
+        )
 
     }
 
@@ -379,13 +490,13 @@ class Parser {
 
         constructor(context: Context, indent: Int, key: String) : this(context, indent) {
             this.key = key
-            child = InitialBlock(context, indent + 1)
+            child = InitialBlock(context.child(key), indent + 1)
             state = State.CHILD
         }
 
         constructor(context: Context, indent: Int, key: String, line: Line) : this(context, indent) {
             this.key = key
-            child = InitialBlock(context, indent + 1)
+            child = InitialBlock(context.child(key), indent + 1)
             child.processLine(line)
             state = State.CHILD
         }
@@ -683,7 +794,8 @@ class Parser {
             get() = getYAMLNode().toString()
 
         private var state: State = State.ITEM
-        private var child: Child = FlowNode("", context)
+        private var seqContext = context.child(0)
+        private var child: Child = FlowNode("", seqContext)
         private var key: String? = null
         private val items = JSONArray.Builder()
 
@@ -693,16 +805,16 @@ class Parser {
                     when (state) {
                         State.ITEM -> {
                             line.skipSpaces()
-                            line.processNodeProperties(context)
+                            line.processNodeProperties(seqContext)
                             child = when {
                                 line.match('"') -> line.processDoubleQuotedScalar()
                                 line.match('\'') -> line.processSingleQuotedScalar()
-                                line.match('[') -> FlowSequence(context, false).also { it.continuation(line) }
-                                line.match('{') -> FlowMapping(context, false).also { it.continuation(line) }
+                                line.match('[') -> FlowSequence(seqContext, false).also { it.continuation(line) }
+                                line.match('{') -> FlowMapping(seqContext, false).also { it.continuation(line) }
                                 line.match('*') -> line.getAnchorName().let {
-                                    AliasChild(context.anchorMap[it] ?: fatal("Can't locate alias \"$it\"", line))
+                                    AliasChild(seqContext.anchorMap[it] ?: fatal("Can't locate alias \"$it\"", line))
                                 }
-                                else -> line.processFlowNode(context = context)
+                                else -> line.processFlowNode(context = seqContext)
                             }
                         }
                         State.CONTINUATION -> child = child.continuation(line)
@@ -721,7 +833,7 @@ class Parser {
                     line.match(']') -> {
                         val item = key?.let { JSONObject.of(it to child.getYAMLNode()) } ?: child.getYAMLNode()
                         item?.let { items.add(it) }
-                        context.saveNodeProperties(item)
+                        seqContext.saveNodeProperties(item)
                         terminated = true
                         state = State.CLOSED
                         break
@@ -733,9 +845,9 @@ class Parser {
                     line.match(',') -> {
                         val item = key?.let { JSONObject.of(it to child.getYAMLNode()) } ?: child.getYAMLNode()
                         items.add(item)
-                        context.saveNodeProperties(item)
+                        seqContext.saveNodeProperties(item)
                         key = null
-                        context.resetNodeProperties()
+                        seqContext = context.child(items.size)
                         state = State.ITEM
                     }
                     else -> fatal("Unexpected character in flow sequence", line)
@@ -758,7 +870,8 @@ class Parser {
         enum class State { ITEM, CONTINUATION, COMMA, CLOSED }
 
         private var state: State = State.ITEM
-        private var child: Child = FlowNode("", context)
+        private var mapContext = context.child("")
+        private var child: Child = FlowNode("", mapContext)
         private var key: String? = null
         private val properties = JSONObject.Builder()
 
@@ -779,16 +892,16 @@ class Parser {
                     when (state) {
                         State.ITEM -> {
                             line.skipSpaces()
-                            line.processNodeProperties(context)
+                            line.processNodeProperties(mapContext)
                             child = when {
                                 line.match('"') -> line.processDoubleQuotedScalar()
                                 line.match('\'') -> line.processSingleQuotedScalar()
-                                line.match('[') -> FlowSequence(context, false).also { it.continuation(line) }
-                                line.match('{') -> FlowMapping(context, false).also { it.continuation(line) }
+                                line.match('[') -> FlowSequence(mapContext, false).also { it.continuation(line) }
+                                line.match('{') -> FlowMapping(mapContext, false).also { it.continuation(line) }
                                 line.match('*') -> line.getAnchorName().let {
-                                    AliasChild(context.anchorMap[it] ?: fatal("Can't locate alias \"$it\"", line))
+                                    AliasChild(mapContext.anchorMap[it] ?: fatal("Can't locate alias \"$it\"", line))
                                 }
-                                else -> line.processFlowNode(context = context)
+                                else -> line.processFlowNode(context = mapContext)
                             }
                         }
                         State.CONTINUATION -> child = child.continuation(line)
@@ -814,13 +927,16 @@ class Parser {
                         break
                     }
                     line.matchColon() || child is DoubleQuotedScalar && line.match(':') -> {
-                        key = child.getYAMLNode().toString()
+                        child.getYAMLNode().toString().let {
+                            key = it
+                            mapContext = context.child(it)
+                        }
                         state = State.ITEM
                     }
                     line.match(',') -> {
                         key?.let { addProperty(it, child.getYAMLNode()) } ?: fatal("Key missing in flow mapping", line)
                         key = null
-                        context.resetNodeProperties()
+                        mapContext = context.child("")
                         state = State.ITEM
                     }
                     else -> fatal("Unexpected character in flow mapping", line)
@@ -830,7 +946,7 @@ class Parser {
 
         private fun addProperty(key: String, value: JSONValue?) {
             properties.add(key, value)
-            context.saveNodeProperties(value)
+            mapContext.saveNodeProperties(value)
         }
 
     }
@@ -1201,24 +1317,25 @@ class Parser {
                                 }
                                 else -> "!"
                             }
-                            val prefix = context.getTagHandle(handle) ?: fatal("Tag handle not declared $handle", this)
+                            val prefix = context.getTagHandle(handle) ?: fatal("Tag handle $handle not declared", this)
                             skip { it !in " \t[]{},!" }
                             val suffix = result
-                            context.tag = "$prefix${suffix.decodePercentEncoding()}"
+                            context.tag = "$prefix${suffix.decodePercentEncoding(this)}"
                         }
+                        skipSpaces()
                     }
                     else -> break
                 }
             }
         }
 
-        private fun String.decodePercentEncoding(): String = mapSubstrings {
+        private fun String.decodePercentEncoding(line: Line): String = mapSubstrings {
             if (this[it] == '%') {
                 buildResult(this, it, 3, "Incomplete percent sequence") {
                     try {
                         (this[it + 1].fromHexDigit() shl 4) or this[it + 2].fromHexDigit()
                     } catch (_: NumberFormatException) {
-                        throw IllegalArgumentException("Illegal percent sequence")
+                        fatal("Illegal percent sequence", line)
                     }
                 }
             }

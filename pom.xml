@@ -62,12 +62,12 @@
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>kjson-core</artifactId>
-      <version>5.3</version>
+      <version>5.4</version>
     </dependency>
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>kjson-pointer</artifactId>
-      <version>4.1</version>
+      <version>4.2</version>
     </dependency>
     <dependency>
       <groupId>net.pwall.text</groupId>
@@ -111,7 +111,7 @@
     <dependency>
       <groupId>net.pwall.json</groupId>
       <artifactId>json-simple</artifactId>
-      <version>1.7.2</version>
+      <version>1.7.3</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

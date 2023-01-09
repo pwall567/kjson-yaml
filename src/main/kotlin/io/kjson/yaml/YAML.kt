@@ -76,4 +76,31 @@ object YAML {
      */
     fun parse(reader: Reader): YAMLDocument = parser.parse(reader)
 
+    /**
+     * Parse a [File] as a multi-document YAML stream.
+     *
+     * @param   file        the input [File]
+     * @param   charset     the [Charset], or `null` to specify that the charset is to be determined dynamically
+     * @return              a [List] of [YAMLDocument]s
+     */
+    fun parseStream(file: File, charset: Charset? = null): List<YAMLDocument> = parser.parseStream(file, charset)
+
+    /**
+     * Parse an [InputStream] as a multi-document YAML stream.
+     *
+     * @param   inputStream the input [InputStream]
+     * @param   charset     the [Charset], or `null` to specify that the charset is to be determined dynamically
+     * @return              a [List] of [YAMLDocument]s
+     */
+    fun parseStream(inputStream: InputStream, charset: Charset? = null): List<YAMLDocument> =
+            parser.parseStream(inputStream, charset)
+
+    /**
+     * Parse a [Reader] as a multi-document YAML stream.
+     *
+     * @param   reader      the input [Reader]
+     * @return              a [List] of [YAMLDocument]s
+     */
+    fun parseStream(reader: Reader): List<YAMLDocument> = parser.parseStream(reader)
+
 }
