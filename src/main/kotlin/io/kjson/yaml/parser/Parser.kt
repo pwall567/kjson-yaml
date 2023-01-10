@@ -113,10 +113,7 @@ class Parser {
                         }
                         text.startsWith("---") -> {
                             state = State.MAIN
-                            line.skipFixed(3)
-                            line.skipSpaces()
-                            if (!line.atEnd())
-                                outerBlock.processLine(line)
+                            processSeparator(line, outerBlock)
                         }
                         text.startsWith("...") -> state = State.ENDED
                         !line.atEnd() -> {
@@ -130,7 +127,10 @@ class Parser {
                         text.startsWith("%YAML") -> fatal("Duplicate or misplaced %YAML directive", line)
                         text.startsWith("%TAG") -> processTAGDirective(context, line)
                         text.startsWith('%') -> warn("Unrecognised directive ignored - $text")
-                        text.startsWith("---") -> state = State.MAIN
+                        text.startsWith("---") -> {
+                            state = State.MAIN
+                            processSeparator(line, outerBlock)
+                        }
                         text.startsWith("...") -> state = State.ENDED
                         !line.atEnd() -> fatal("Illegal data following directive(s)", line)
                     }
@@ -203,10 +203,7 @@ class Parser {
                         }
                         text.startsWith("---") -> {
                             state = State.MAIN
-                            line.skipFixed(3)
-                            line.skipSpaces()
-                            if (!line.atEnd())
-                                outerBlock.processLine(line)
+                            processSeparator(line, outerBlock)
                         }
                         text.startsWith("...") -> result.add(YAMLDocument(null))
                         !line.atEnd() -> {
@@ -220,7 +217,10 @@ class Parser {
                         text.startsWith("%YAML") -> fatal("Duplicate or misplaced %YAML directive", line)
                         text.startsWith("%TAG") -> processTAGDirective(context, line)
                         text.startsWith('%') -> warn("Unrecognised directive ignored - $text")
-                        text.startsWith("---") -> state = State.MAIN
+                        text.startsWith("---") -> {
+                            state = State.MAIN
+                            processSeparator(line, outerBlock)
+                        }
                         text.startsWith("...") -> {
                             result.add(createYAMLDocument(null, context))
                             state = State.INITIAL
@@ -241,6 +241,7 @@ class Parser {
                             context = Context()
                             outerBlock = InitialBlock(context, 0)
                             state = State.MAIN
+                            processSeparator(line, outerBlock)
                         }
                         line.atEnd() -> outerBlock.processBlankLine(line)
                         else -> outerBlock.processLine(line)
@@ -255,6 +256,13 @@ class Parser {
         if (state != State.INITIAL || result.isEmpty())
             result.add(createYAMLDocument(outerBlock.conclude(Line(lineNumber, "")), context))
         return result
+    }
+
+    private fun processSeparator(line: Line, outerBlock: Block) {
+        line.skipFixed(3)
+        line.skipSpaces()
+        if (!line.atEnd())
+            outerBlock.processLine(line)
     }
 
     private fun createYAMLDocument(rootNode: JSONValue?, context: Context): YAMLDocument {
@@ -525,9 +533,10 @@ class Parser {
                     if (line.index >= child.indent)
                         child.processLine(line)
                     else {
-                        key = child.conclude(line)?.let { if (it is JSONString) it.value else it.toString() } ?: "null"
-                        if (properties.containsKey(key))
-                            fatal("Duplicate key in mapping - $key", line)
+                        saveKey(line)
+//                        key = child.conclude(line)?.let { if (it is JSONString) it.value else it.toString() } ?: "null"
+//                        if (properties.containsKey(key))
+//                            fatal("Duplicate key in mapping - $key", line)
                         state = State.COLON
                         processColon(line)
                     }
@@ -544,6 +553,12 @@ class Parser {
                 }
                 State.CLOSED -> fatal("Unexpected state in YAML processing", line)
             }
+        }
+
+        private fun saveKey(line: Line) {
+            key = child.conclude(line)?.let { if (it is JSONString) it.value else it.toString() } ?: "null"
+            if (properties.containsKey(key))
+                fatal("Duplicate key in mapping - $key", line)
         }
 
         override fun processBlankLine(line: Line) {
@@ -598,25 +613,35 @@ class Parser {
         }
 
         private fun processColon(line: Line) {
-            if (line.match(':')) {
-                line.skipSpaces()
-                if (line.atEnd())
-                    child = InitialBlock(context.child(key), indent + 1)
-                else {
-                    child = InitialBlock(context.child(key), line.index)
-                    child.processLine(line)
+            when {
+                line.match(':') -> {
+                    line.skipSpaces()
+                    if (line.atEnd())
+                        child = InitialBlock(context.child(key), indent + 1)
+                    else {
+                        child = InitialBlock(context.child(key), line.index)
+                        child.processLine(line)
+                    }
+                    state = State.CHILD
                 }
-                state = State.CHILD
+                line.match('?') -> {
+                    saveKey(line)
+                    properties.add(key, null)
+                    line.revert()
+                    processQM(line)
+                }
+                else -> fatal("Unexpected content in block mapping", line)
             }
-            else
-                fatal("Unexpected content in block mapping", line)
         }
 
         override fun conclude(line: Line): JSONObject {
             when (state) {
                 State.KEY -> {}
                 State.QM_CHILD,
-                State.COLON -> fatal("Block mapping value missing", line)
+                State.COLON -> {
+                    saveKey(line)
+                    properties.add(key, null)
+                }
                 State.CHILD -> properties.add(key, child.conclude(line))
                 State.CLOSED -> {}
             }
