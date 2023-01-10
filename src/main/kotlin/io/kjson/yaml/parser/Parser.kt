@@ -1161,11 +1161,17 @@ class Parser {
     class FoldedBlockScalar(indent: Int, chomping: Chomping) : BlockScalar(indent, chomping) {
 
         override fun appendText(string: String) {
-            if (text.endsWith('\n')) {
-                text.setLength(text.length - 1)
-                while (text.endsWith(' '))
+            if (!(string.isEmpty() || string.startsWith(' ') || string.startsWith('\b'))) {
+                if (text.endsWith('\n')) {
                     text.setLength(text.length - 1)
-                text.append(' ')
+                    if (text.endsWith('\n'))
+                        text.append('\n')
+                    else {
+                        while (text.endsWith(' '))
+                            text.setLength(text.length - 1)
+                        text.append(' ')
+                    }
+                }
             }
             text.append(string)
             text.append('\n')
