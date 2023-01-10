@@ -19,23 +19,61 @@ To parse a YAML file:
 ```
 
 The result is a `YAMLDocument`, and the `rootNode` property contains the root (or only) node of the tree of YAML nodes.
-The tree may be navigated as if it were a JSON structure, using the [kjson-core](https://github.com/pwall567/kjson-core)
-or [kjson-pointer](https://github.com/pwall567/kjson-pointer) libraries or others.
+The tree may be navigated as if it were a JSON structure, using the
+[`kjson-core`](https://github.com/pwall567/kjson-core) or [`kjson-pointer`](https://github.com/pwall567/kjson-pointer)
+libraries or others.
 
 For example, to retrieve the `description` property of the `info` section of an OpenAPI 3.0 YAML file:
 ```kotlin
     val file = File("path.to.swagger.file")
     val yamlDocument = YAML.parse(file)
     val pointer = JSONPointer("/info/description")
-    val description = yamlDocument.rootNode[pointer]
+    val description = pointer.find(yamlDocument.rootNode).asString
 ```
 
-## Tags
+## Background
 
-Because YAML tags do not form part of the JSON structure, any tags present in the YAML are stored in a separate map,
-accessed by the `JSONPointer` pointing to the node.
-The function `getTag()` on the `YAMLDocument` will return the tag for the nominated node, or the default tag for the
-node type if no tag was specified.
+[Version 1.2 of YAML](https://yaml.org/spec/1.2.2/) had as one of its main design goals making YAML a valid superset of
+JSON.
+That means that many uses of JSON (for example, configuration files, or even JSON Schema files) may now be coded in YAML
+if that is the preferred representation, and the code to interpret those files may be written to be independent of the
+form used.
+
+The `kjson-yaml` library provides functions to parse a YAML file into a structure that may be navigated as if it had
+been parsed from JSON.
+It uses the internal JSON representations from the [`kjson-core`](https://github.com/pwall567/kjson-core) library, and
+the YAML node types map to `kjson-core` classes as follows:
+
+- scalars containing integer values that can be represented in a Kotlin `Int`: `JSONInt`
+- scalars containing integer values bigger than an `Int` but that will fit in a `Long`: `JSONLong`
+- all other numeric scalars: `JSONDecimal`
+- boolean scalars: `JSONBoolean`
+- all other scalars: `JSONString`
+- sequences (both block and flow sequences): `JSONArray`
+- mappings (both block and flow mappings): `JSONObject`
+
+The documentation for the [`kjson-core`](https://github.com/pwall567/kjson-core) library includes comprehensive details
+on accessing the data in the result classes, but the following hints may be all that many users need:
+
+1. the value of a `JSONString`, `JSONInt`, `JSONLong`, `JSONDecimal` or `JSONBoolean` may be obtained using the `value`
+   property
+2. `JSONArray` implements `List<JSONValue?>`, so it may be iterated over using the standard Kotlin functions
+3. `JSONObject` implements `Map<String, JSONValue?>`, so all of the standard Kotlin lookup and iteration functions are
+   available
+
+## Problematic Constructs
+
+Just because all JSON can be parsed as YAML, that doesn&rsquo;t mean that all YAML may be parsed as JSON.
+There are three main areas where a workaround is required.
+
+### Tags
+
+Tags are a form of metadata that may be applied to any YAML node.
+There is no equivalent in JSON, so `kjson-yaml` stores tags in a separate structure, allowing tag-aware applications to
+interrogate the tags of a YAML document, without impacting on JSON compatibility for those who don&rsquo;t use them.
+
+The function `getTag()` on the `YAMLDocument` will return the tag for the nominated node (specified by means of a
+`JSONPointer`), or the default tag for the node type if no tag was specified.
 
 For example, following the above code to get the `description` node of an OpenAPI file, the tag for that node may be
 retrieved using:
@@ -45,50 +83,80 @@ retrieved using:
 
 Unless the tag was explicitly overridden, this will return `tag:yaml.org,2002:str` (the default tag for a string node).
 
-## Implemented Subset
+### Floating-Point Special Values
 
-This parser does not implement the full [YAML specification](https://yaml.org/spec/1.2/spec.html).
-The currently implemented subset includes:
+The constants `.nan`, `.inf` and `-.inf` have no representation in `kjson-core`, which uses `BigDecimal` for
+floating-point numbers.
+Any occurrence of these values as unquoted flow scalars will result in `JSONString` nodes containing the text of the
+constant, but the tag for the node will be set (unless it has been set explicitly) to `tag:yaml.org,2002:float`, the
+default tag for floating-point numbers.
 
-- Block Mappings
-- Block Sequences
-- Block Scalars (literal and folded)
-- Flow Scalars (plain, single quoted and double quoted)
-- Flow Sequences
-- Flow Mappings
-- Comments
-- Tags
-- Anchors and Aliases
-- `%YAML` directive
-- `%TAG` directive
+### Complex Nodes as Mapping Keys
 
-Not yet implemented:
+YAML allows the key of a mapping to be a complex node, such as a sequence or another mapping.
+JSON requires that object property names be strings, so any non-string mapping keys are converted to JSON, and the JSON
+form is then used as the string key for the mapping.
 
-- Multiple documents in a single file
+(This is a very obscure case that almost never occurs in practice, so if you didn&rsquo;t understand this section, you
+are very unlikely to be affected by it.  But at least you can be assured that it is covered.)
 
-Also, the parser may not yet meet the specification in all respects, even for the constructs that it does handle.
+## Anchors and Aliases
+
+Anchors and aliases provide a means of nominating a YAML node (which may be a complex structure) for later re-use in the
+same document.
+For example:
+```yaml
+physical-address: &ADDR
+  street: 21 Wonder St
+  location: Anytown
+  state: XY
+postal-address: *ADDR
+```
+
+Because `kjson-core` values are immutable, the same internal representation will be used for all alias references to the
+anchor node, meaning that this technique will save both memory and processing time, as well as coding effort.
+
+## Multiple Documents
+
+The YAML specification allows for multiple YAML documents to be concatenated in a single file, known as a stream.
+The `kjson-yaml` library allows this usage, but it requires the use of the `parseStream()` function, which returns a
+`List` instead of a single document:
+```kotlin
+    val file = File("path.to.swagger.file")
+    val yamlDocuments: List<YAMLDocument> = YAML.parseStream(file)
+```
+The documents are independent of each other, but error message line numbers will start from the beginning of the file,
+not the document.
+
+## Examples from Specification
+
+To confirm the ability of the library to handle all forms of YAML, the tests for the library include all of the examples
+from [Chapter 2](https://yaml.org/spec/1.2.2/#language-overview) of the specification.
+To examine the code used to inspect the results (and for guidance on the JSON equivalents of the YAML), see the class
+[`SpecExampleTest`](https://github.com/pwall567/kjson-yaml/blob/main/src/test/kotlin/io/kjson/yaml/SpecExampleTest.kt)
+in the test section of this project.
 
 ## Dependency Specification
 
-The latest version of the library is 1.10, and it may be obtained from the Maven Central repository.
+The latest version of the library is 2.0, and it may be obtained from the Maven Central repository.
 
 ### Maven
 ```xml
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>kjson-yaml</artifactId>
-      <version>1.10</version>
+      <version>2.0</version>
     </dependency>
 ```
 ### Gradle
 ```groovy
-    implementation 'io.kjson:kjson-yaml:1.10'
+    implementation 'io.kjson:kjson-yaml:2.0'
 ```
 ### Gradle (kts)
 ```kotlin
-    implementation("io.kjson:kjson-yaml:1.10")
+    implementation("io.kjson:kjson-yaml:2.0")
 ```
 
 Peter Wall
 
-2022-11-17
+2023-01-10

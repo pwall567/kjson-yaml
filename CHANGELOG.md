@@ -2,11 +2,12 @@
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
-## [Unreleased]
+## [2.0] - 2023-01-10
 ### Changed
 - `Parser`: added anchor and alias
 - `Parser`: added tag handling
 - `Parser`: added `parseStream()` (multiple documents in stream)
+- `Parser`: several bug fixes
 - `pom.xml`: updated dependency versions
 
 ## [1.10] - 2022-10-27
