@@ -28,7 +28,7 @@ For example, to retrieve the `description` property of the `info` section of an 
     val file = File("path.to.swagger.file")
     val yamlDocument = YAML.parse(file)
     val pointer = JSONPointer("/info/description")
-    val description = pointer.find(yamlDocument.rootNode).asString
+    val description = yamlDocument.rootNode[pointer].asString
 ```
 
 ## Background
