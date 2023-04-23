@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.com/pwall567/kjson-yaml.svg?branch=main)](https://app.travis-ci.com/github/pwall567/kjson-yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Kotlin](https://img.shields.io/static/v1?label=Kotlin&message=v1.6.10&color=7f52ff&logo=kotlin&logoColor=7f52ff)](https://github.com/JetBrains/kotlin/releases/tag/v1.6.10)
+[![Kotlin](https://img.shields.io/static/v1?label=Kotlin&message=v1.7.21&color=7f52ff&logo=kotlin&logoColor=7f52ff)](https://github.com/JetBrains/kotlin/releases/tag/v1.7.21)
 [![Maven Central](https://img.shields.io/maven-central/v/io.kjson/kjson-yaml?label=Maven%20Central)](https://search.maven.org/search?q=g:%22io.kjson%22%20AND%20a:%22kjson-yaml%22)
 
 Kotlin YAML processor.
@@ -55,11 +55,13 @@ the YAML node types map to `kjson-core` classes as follows:
 The documentation for the [`kjson-core`](https://github.com/pwall567/kjson-core) library includes comprehensive details
 on accessing the data in the result classes, but the following hints may be all that many users need:
 
-1. the value of a `JSONString`, `JSONInt`, `JSONLong`, `JSONDecimal` or `JSONBoolean` may be obtained using the `value`
-   property
-2. `JSONArray` implements `List<JSONValue?>`, so it may be iterated over using the standard Kotlin functions
-3. `JSONObject` implements `Map<String, JSONValue?>`, so all of the standard Kotlin lookup and iteration functions are
-   available
+1. The value of a `JSONString`, `JSONInt`, `JSONLong`, `JSONDecimal` or `JSONBoolean` may be obtained using the `value`
+   property (`String`, `Int`, `Long`, `BigDecimal` or `Boolean` respectively).
+2. `JSONString` also implements `CharSequence`, so it may be used directly in cases where `CharSequence` is required,
+   and the indexing, iteration and `subSequence` functions are all available.
+3. `JSONArray` implements `List<JSONValue?>`, so it may be iterated over using the standard Kotlin functions.
+4. `JSONObject` implements `Map<String, JSONValue?>`, so all of the standard Kotlin lookup and iteration functions are
+   available.
 
 ## Problematic Constructs
 
@@ -138,25 +140,25 @@ in the test section of this project.
 
 ## Dependency Specification
 
-The latest version of the library is 2.0, and it may be obtained from the Maven Central repository.
+The latest version of the library is 2.1, and it may be obtained from the Maven Central repository.
 
 ### Maven
 ```xml
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>kjson-yaml</artifactId>
-      <version>2.0</version>
+      <version>2.1</version>
     </dependency>
 ```
 ### Gradle
 ```groovy
-    implementation 'io.kjson:kjson-yaml:2.0'
+    implementation 'io.kjson:kjson-yaml:2.1'
 ```
 ### Gradle (kts)
 ```kotlin
-    implementation("io.kjson:kjson-yaml:2.0")
+    implementation("io.kjson:kjson-yaml:2.1")
 ```
 
 Peter Wall
 
-2023-01-10
+2023-04-23
