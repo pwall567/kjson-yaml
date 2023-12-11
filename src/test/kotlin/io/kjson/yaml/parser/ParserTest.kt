@@ -852,6 +852,37 @@ class ParserTest {
         }
     }
 
+    @Test fun `should process mixed flow sequence content`() {
+        val file = File("src/test/resources/mixedFlowSequence.yaml")
+        val result = Parser().parse(file)
+        log.debug { result.rootNode?.toJSON() }
+        result.rootNode.asObject.let {
+            expect(1) { it.size }
+            it["enum"].asArray.let { seq ->
+                expect(3) { seq.size }
+                expect("ABC") { seq[0].asString }
+                expect("123") { seq[1].asString }
+                expect("XYZ") { seq[2].asString }
+            }
+        }
+    }
+
+    @Test fun `should process mixed flow sequence with flow mapping`() {
+        val file = File("src/test/resources/mixedFlowSequenceWithMapping.yaml")
+        val result = Parser().parse(file)
+        log.debug { result.rootNode?.toJSON() }
+        result.rootNode.asObject.let {
+            expect(1) { it.size }
+            it["example"].asArray.let { seq ->
+                expect(1) { seq.size }
+                seq[0].asObject.let { mapping ->
+                    expect(1) { mapping.size }
+                    expect("1.5") { mapping["prop1"].asString }
+                }
+            }
+        }
+    }
+
     @Test fun `should process example JSON schema`() {
         val file = File("src/test/resources/example.schema.yaml")
         val result = Parser().parse(file)

@@ -385,6 +385,7 @@ class Parser {
         abstract fun processLine(line: Line)
         open fun processBlankLine(line: Line) {}
         abstract fun conclude(line: Line): JSONValue?
+        abstract fun inFlow(): Boolean
     }
 
     object ErrorBlock : Block(Context(), 0) {
@@ -392,6 +393,8 @@ class Parser {
         override fun processLine(line: Line) = fatal("Should not happen", line)
 
         override fun conclude(line: Line) = fatal("Should not happen", line)
+
+        override fun inFlow(): Boolean = false
 
     }
 
@@ -402,6 +405,8 @@ class Parser {
         private var state: State = State.INITIAL
         private var node: JSONValue? = null
         private var child: Block = ErrorBlock
+
+        override fun inFlow(): Boolean = state == State.CHILD && child.inFlow()
 
         override fun processLine(line: Line) {
             when (state) {
@@ -521,6 +526,8 @@ class Parser {
             state = State.CHILD
         }
 
+        override fun inFlow(): Boolean = (state == State.CHILD || state == State.QM_CHILD) && child.inFlow()
+
         override fun processLine(line: Line) {
             var effectiveIndent = line.index
             if (line.matchDash()) {
@@ -530,7 +537,7 @@ class Parser {
             when (state) {
                 State.KEY -> processQM(line)
                 State.QM_CHILD -> {
-                    if (line.index >= child.indent)
+                    if (line.index > indent || child.inFlow())
                         child.processLine(line)
                     else {
                         saveKey(line)
@@ -543,7 +550,7 @@ class Parser {
                 }
                 State.COLON -> processColon(line)
                 State.CHILD -> {
-                    if (effectiveIndent >= child.indent)
+                    if (effectiveIndent > indent || child.inFlow())
                         child.processLine(line)
                     else {
                         properties.add(key, child.conclude(line))
@@ -659,11 +666,13 @@ class Parser {
         private val items = JSONArray.Builder()
         private var child: Block = InitialBlock(context.child(0), indent + 2)
 
+        override fun inFlow(): Boolean = state == State.CHILD && child.inFlow()
+
         override fun processLine(line: Line) {
             when (state) {
                 State.DASH -> processDash(line)
                 State.CHILD -> {
-                    if (line.index >= child.indent)
+                    if (line.index > indent || child.inFlow())
                         child.processLine(line)
                     else {
                         items.add(child.conclude(line))
@@ -721,6 +730,8 @@ class Parser {
             this.child = scalar
             state = State.CONTINUATION
         }
+
+        override fun inFlow(): Boolean = state == State.CONTINUATION && child.inFlow()
 
         override fun processLine(line: Line) {
             child = when (state) {
@@ -808,6 +819,8 @@ class Parser {
 
         abstract fun continuation(line: Line): Child
 
+        abstract fun inFlow(): Boolean
+
     }
 
     class AliasChild(private val node: JSONValue): Child(true) {
@@ -820,6 +833,8 @@ class Parser {
         }
 
         override fun getYAMLNode(): JSONValue = node
+
+        override fun inFlow(): Boolean = false
 
     }
 
@@ -835,6 +850,8 @@ class Parser {
         private var child: Child = FlowNode("", seqContext)
         private var key: String? = null
         private val items = JSONArray.Builder()
+
+        override fun inFlow(): Boolean = state != State.CLOSED
 
         private fun processLine(line: Line) {
             while (!line.atEnd()) {
@@ -915,6 +932,8 @@ class Parser {
         override val text: CharSequence
             get() = getYAMLNode().toString()
 
+        override fun inFlow(): Boolean = state != State.CLOSED
+
         override fun continuation(line: Line): Child {
             if (state != State.CLOSED)
                 processLine(line)
@@ -991,6 +1010,8 @@ class Parser {
     abstract class FlowScalar(override val text: String, terminated: Boolean) : Child(terminated) {
 
         override fun getYAMLNode(): JSONValue? = JSONString(text)
+
+        override fun inFlow(): Boolean = false
 
     }
 
@@ -1116,6 +1137,8 @@ class Parser {
             get() = true
 
         abstract fun appendText(string: String)
+
+        override fun inFlow(): Boolean = false
 
         override fun continuation(line: Line): BlockScalar {
             when (state) {

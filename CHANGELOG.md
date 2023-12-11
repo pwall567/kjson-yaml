@@ -2,6 +2,11 @@
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [2.6] - 2023-12-11
+### Changed
+- `Parser`: fixed bug in nested flow mapping and sequence
+- `pom.xml`: updated dependency versions
+
 ## [2.5] - 2023-09-25
 ### Changed
 - `pom.xml`: updated dependency versions
