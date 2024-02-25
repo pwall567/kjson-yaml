@@ -140,25 +140,25 @@ in the test section of this project.
 
 ## Dependency Specification
 
-The latest version of the library is 2.11, and it may be obtained from the Maven Central repository.
+The latest version of the library is 2.12, and it may be obtained from the Maven Central repository.
 
 ### Maven
 ```xml
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>kjson-yaml</artifactId>
-      <version>2.11</version>
+      <version>2.12</version>
     </dependency>
 ```
 ### Gradle
 ```groovy
-    implementation 'io.kjson:kjson-yaml:2.11'
+    implementation 'io.kjson:kjson-yaml:2.12'
 ```
 ### Gradle (kts)
 ```kotlin
-    implementation("io.kjson:kjson-yaml:2.11")
+    implementation("io.kjson:kjson-yaml:2.12")
 ```
 
 Peter Wall
 
-2024-02-18
+2024-02-25
