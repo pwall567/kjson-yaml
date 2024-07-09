@@ -2,7 +2,7 @@
  * @(#) Line.kt
  *
  * kjson-yaml  Kotlin YAML processor
- * Copyright (c) 2020, 2021, 2023 Peter Wall
+ * Copyright (c) 2020, 2021, 2023, 2024 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -68,9 +68,7 @@ class Line(val lineNumber: Int, line: String) : TextMatcher(line) {
         if (!match('#'))
             return false
         index = start
-        if (start == 0 || isSpace(getChar(start - 1)))
-            return true
-        return false
+        return start == 0 || isSpace(getChar(start - 1))
     }
 
     fun matchSpace(): Boolean = match(' ') || match('\t')
@@ -93,5 +91,10 @@ class Line(val lineNumber: Int, line: String) : TextMatcher(line) {
     }
 
     private fun isSpace(ch: Char): Boolean = ch == ' ' || ch == '\t'
+
+    /**
+     * Return the co-ordinates of the current location, to allow the `Line` object to be used in a [YAMLParseException].
+     */
+    override fun toString(): String = "$lineNumber:${index + 1}"
 
 }

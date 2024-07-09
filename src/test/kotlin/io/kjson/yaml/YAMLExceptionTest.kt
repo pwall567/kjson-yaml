@@ -2,7 +2,7 @@
  * @(#) YAMLExceptionTest.kt
  *
  * kjson-yaml  Kotlin YAML processor
- * Copyright (c) 2020, 2021 Peter Wall
+ * Copyright (c) 2020, 2021, 2024 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,7 +37,7 @@ class YAMLExceptionTest {
 
     @Test fun `should create YAMLException with nested exception`() {
         val nested = IllegalArgumentException("Dummy")
-        val ye = YAMLException("Oh no!", nested)
+        val ye = YAMLException("Oh no!").withCause(nested)
         expect("Oh no!") { ye.message }
         expect(nested) { ye.cause }
     }

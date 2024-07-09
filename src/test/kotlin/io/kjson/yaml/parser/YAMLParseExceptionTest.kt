@@ -2,7 +2,7 @@
  * @(#) YAMLParseExceptionTest.kt
  *
  * kjson-yaml  Kotlin YAML processor
- * Copyright (c) 2020, 2021 Peter Wall
+ * Copyright (c) 2020, 2021, 2024 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,16 +34,16 @@ class YAMLParseExceptionTest {
         val line = Line(8, "  Hello  ")
         val ype = YAMLParseException("Something went wrong", line)
         expect("Something went wrong") { ype.text }
-        expect("Something went wrong at 8:3") { ype.message }
+        expect("Something went wrong, at 8:3") { ype.message }
         expect(8) { ype.line.lineNumber }
     }
 
     @Test fun `should create YAMLParseException with nested exception`() {
         val line = Line(123, "XXX")
         val nested = IllegalArgumentException("Dummy")
-        val ype = YAMLParseException("Oh no!", line, nested)
+        val ype = YAMLParseException("Oh no!", line).withCause(nested)
         expect("Oh no!") { ype.text }
-        expect("Oh no! at 123:1") { ype.message }
+        expect("Oh no!, at 123:1") { ype.message }
         expect(nested) { ype.cause }
     }
 

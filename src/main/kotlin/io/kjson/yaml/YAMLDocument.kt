@@ -86,7 +86,9 @@ class YAMLDocument(
 
     companion object {
 
+        @Suppress("ConstPropertyName")
         const val defaultMajorVersion = 1
+        @Suppress("ConstPropertyName")
         const val defaultMinorVersion = 2
 
     }

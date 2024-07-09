@@ -2,7 +2,7 @@
  * @(#) YAMLException.kt
  *
  * kjson-yaml  Kotlin YAML processor
- * Copyright (c) 2020, 2021 Peter Wall
+ * Copyright (c) 2020, 2021, 2024 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,10 +32,4 @@ import io.kjson.JSONException
  *
  * @author  Peter Wall
  */
-open class YAMLException(message: String) : JSONException(message) {
-
-    constructor(message: String, nested: Exception) : this(message) {
-        super.initCause(nested)
-    }
-
-}
+open class YAMLException(message: String, key: Any? = null) : JSONException(message, key)

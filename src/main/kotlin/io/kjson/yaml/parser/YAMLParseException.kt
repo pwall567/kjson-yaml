@@ -2,7 +2,7 @@
  * @(#) YAMLParseException.kt
  *
  * kjson-yaml  Kotlin YAML processor
- * Copyright (c) 2020, 2021 Peter Wall
+ * Copyright (c) 2020, 2021, 2024 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,11 +32,4 @@ import io.kjson.yaml.YAMLException
  *
  * @author  Peter Wall
  */
-class YAMLParseException(val text: String, val line: Line) :
-        YAMLException("$text at ${line.lineNumber}:${line.index + 1}") {
-
-    constructor(text: String, line: Line, nested: Exception) : this(text, line) {
-        initCause(nested)
-    }
-
-}
+class YAMLParseException(text: String, val line: Line) : YAMLException(text, line)

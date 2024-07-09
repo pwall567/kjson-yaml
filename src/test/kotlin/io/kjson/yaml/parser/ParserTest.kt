@@ -2,7 +2,7 @@
  * @(#) ParserTest.kt
  *
  * kjson-yaml  Kotlin YAML processor
- * Copyright (c) 2020, 2021, 2023 Peter Wall
+ * Copyright (c) 2020, 2021, 2023, 2024 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -49,6 +49,7 @@ import io.kjson.JSONInt
 import io.kjson.JSONObject
 import io.kjson.JSONString
 import io.kjson.pointer.JSONPointer
+import io.kjson.pointer.find
 import io.kjson.yaml.YAML.floatTag
 import io.kjson.yaml.YAML.intTag
 import io.kjson.yaml.YAML.seqTag
@@ -207,14 +208,14 @@ class ParserTest {
     @Test fun `should fail on YAML directive not 1 x`() {
         val file = File("src/test/resources/directive3.yaml")
         assertFailsWith<YAMLException> { Parser().parse(file) }.let {
-            expect("%YAML version must be 1.x at 1:10") { it.message }
+            expect("%YAML version must be 1.x, at 1:10") { it.message }
         }
     }
 
     @Test fun `should fail on invalid TAG handle`() {
         val file = File("src/test/resources/tag99.yaml")
         assertFailsWith<YAMLException> { Parser().parse(file) }.let {
-            expect("Illegal tag handle on %TAG directive at 2:6") { it.message }
+            expect("Illegal tag handle on %TAG directive, at 2:6") { it.message }
         }
     }
 
@@ -620,14 +621,14 @@ class ParserTest {
     @Test fun `should throw exception on unknown anchor`() {
         val file = File("src/test/resources/anchorError1.yaml")
         assertFailsWith<YAMLParseException> { Parser().parse(file) }.let {
-            expect("Can't locate alias \"unknown\" at 2:14") { it.message }
+            expect("Can't locate alias \"unknown\", at 2:14") { it.message }
         }
     }
 
     @Test fun `should throw exception on recursive anchor`() {
         val file = File("src/test/resources/anchorError2.yaml")
         assertFailsWith<YAMLParseException> { Parser().parse(file) }.let {
-            expect("Can't locate alias \"aaa\" at 2:12") { it.message }
+            expect("Can't locate alias \"aaa\", at 2:12") { it.message }
         }
     }
 
@@ -636,7 +637,7 @@ class ParserTest {
         val result = Parser().parse(reader)
         log.info { result.rootNode?.toJSON() }
         val rootNode = result.rootNode ?: fail("Result is null")
-        expect("ccc:\n\nddd:") { JSONPointer.find("/aaa/bbb", rootNode).asString }
+        expect("ccc:\n\nddd:") { JSONPointer("/aaa/bbb").find(rootNode).asString }
     }
 
     @Test fun `should process shorthand tag`() {
@@ -848,7 +849,7 @@ class ParserTest {
     @Test fun `should throw exception when using tag from previous document`() {
         val file = File("src/test/resources/multi4.yaml")
         assertFailsWith<YAMLParseException> { Parser().parseStream(file) }.let {
-            expect("Tag handle !t1! not declared at 8:5") { it.message }
+            expect("Tag handle !t1! not declared, at 8:5") { it.message }
         }
     }
 
@@ -942,6 +943,7 @@ class ParserTest {
 
         val log = getLogger()
 
+        @Suppress("ConstPropertyName")
         const val test1 = """
 aaa:
   bbb: |-

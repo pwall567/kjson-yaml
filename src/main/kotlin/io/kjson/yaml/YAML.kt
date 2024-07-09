@@ -39,13 +39,21 @@ import io.kjson.yaml.parser.Parser
  */
 object YAML {
 
+    @Suppress("ConstPropertyName")
     const val tagPrefix = "tag:yaml.org,2002:"
+    @Suppress("ConstPropertyName")
     const val nullTag = "tag:yaml.org,2002:null"
+    @Suppress("ConstPropertyName")
     const val mapTag = "tag:yaml.org,2002:map"
+    @Suppress("ConstPropertyName")
     const val seqTag = "tag:yaml.org,2002:seq"
+    @Suppress("ConstPropertyName")
     const val strTag = "tag:yaml.org,2002:str"
+    @Suppress("ConstPropertyName")
     const val intTag = "tag:yaml.org,2002:int"
+    @Suppress("ConstPropertyName")
     const val floatTag = "tag:yaml.org,2002:float"
+    @Suppress("ConstPropertyName")
     const val boolTag = "tag:yaml.org,2002:bool"
 
     val parser = Parser()
