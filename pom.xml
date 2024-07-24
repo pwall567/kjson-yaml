@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>kjson-yaml</artifactId>
-  <version>3.0</version>
+  <version>3.1</version>
   <name>Kotlin YAML processor</name>
   <packaging>jar</packaging>
   <url>https://github.com/pwall567/kjson-yaml</url>
@@ -62,12 +62,12 @@
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>kjson-core</artifactId>
-      <version>8.2</version>
+      <version>9.0</version>
     </dependency>
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>kjson-pointer</artifactId>
-      <version>8.0</version>
+      <version>8.1</version>
     </dependency>
     <dependency>
       <groupId>net.pwall.text</groupId>
@@ -77,7 +77,7 @@
     <dependency>
       <groupId>net.pwall.text</groupId>
       <artifactId>string-mapper</artifactId>
-      <version>2.2</version>
+      <version>2.3</version>
     </dependency>
     <dependency>
       <groupId>net.pwall.util</groupId>
@@ -87,7 +87,7 @@
     <dependency>
       <groupId>net.pwall.log</groupId>
       <artifactId>log-front-kotlin</artifactId>
-      <version>5.3</version>
+      <version>5.3.1</version>
     </dependency>
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
