@@ -2,7 +2,7 @@
  * @(#) YAMLDocumentTest.kt
  *
  * kjson-yaml  Kotlin YAML processor
- * Copyright (c) 2020, 2021, 2023 Peter Wall
+ * Copyright (c) 2020, 2021, 2023, 2024 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,10 +26,11 @@
 package io.kjson.yaml
 
 import kotlin.test.Test
-import kotlin.test.assertFailsWith
-import kotlin.test.expect
 
 import java.io.File
+
+import io.kstuff.test.shouldBe
+import io.kstuff.test.shouldThrow
 
 import io.kjson.JSONString
 import io.kjson.pointer.JSONPointer
@@ -39,26 +40,26 @@ class YAMLDocumentTest {
     @Test fun `should create YAMLDocument`() {
         val testNode = JSONString("hello")
         val doc = YAMLDocument(testNode, emptyMap())
-        expect(testNode) { doc.rootNode }
-        expect(1) { doc.majorVersion }
-        expect(2) { doc.minorVersion }
+        doc.rootNode shouldBe testNode
+        doc.majorVersion shouldBe 1
+        doc.minorVersion shouldBe 2
     }
 
     @Test fun `should get default tags`() {
         val document = YAML.parse(File("src/test/resources/alltypes.yaml"))
-        expect("tag:yaml.org,2002:str") { document.getTag(JSONPointer("/string")) }
-        expect("tag:yaml.org,2002:int") { document.getTag(JSONPointer("/int")) }
-        expect("tag:yaml.org,2002:float") { document.getTag(JSONPointer("/decimal")) }
-        expect("tag:yaml.org,2002:bool") { document.getTag(JSONPointer("/boolean")) }
-        expect("tag:yaml.org,2002:null") { document.getTag(JSONPointer("/empty")) }
-        expect("tag:yaml.org,2002:seq") { document.getTag(JSONPointer("/array")) }
-        expect("tag:yaml.org,2002:map") { document.getTag(JSONPointer("/object")) }
+        document.getTag(JSONPointer("/string")) shouldBe "tag:yaml.org,2002:str"
+        document.getTag(JSONPointer("/int")) shouldBe "tag:yaml.org,2002:int"
+        document.getTag(JSONPointer("/decimal")) shouldBe "tag:yaml.org,2002:float"
+        document.getTag(JSONPointer("/boolean")) shouldBe "tag:yaml.org,2002:bool"
+        document.getTag(JSONPointer("/empty")) shouldBe "tag:yaml.org,2002:null"
+        document.getTag(JSONPointer("/array")) shouldBe "tag:yaml.org,2002:seq"
+        document.getTag(JSONPointer("/object")) shouldBe "tag:yaml.org,2002:map"
     }
 
     @Test fun `should throw exception getting tag for unknown node`() {
         val document = YAML.parse(File("src/test/resources/alltypes.yaml"))
-        assertFailsWith<YAMLException> { document.getTag(JSONPointer("/rubbish")) }.let {
-            expect("Node does not exist - /rubbish") { it.message }
+        shouldThrow<YAMLException>("Node does not exist - /rubbish") {
+            document.getTag(JSONPointer("/rubbish"))
         }
     }
 

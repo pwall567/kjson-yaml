@@ -2,7 +2,7 @@
  * @(#) LoggingTest.kt
  *
  * kjson-yaml  Kotlin YAML processor
- * Copyright (c) 2020, 2021 Peter Wall
+ * Copyright (c) 2020, 2021, 2024 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,10 +26,10 @@
 package io.kjson.yaml.parser
 
 import kotlin.test.Test
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 import java.io.File
+
+import io.kstuff.test.shouldBe
 
 import net.pwall.log.LogList
 import net.pwall.log.isDebug
@@ -40,10 +40,8 @@ class LoggingTest {
         LogList().use { logList ->
             val emptyFile = File("src/test/resources/empty.yaml")
             val result = Parser().parse(emptyFile)
-            assertNull(result.rootNode)
-            assertTrue {
-                logList.any { it.isDebug("Parse complete; result is null") }
-            }
+            result.rootNode shouldBe null
+            logList.any { it.isDebug("Parse complete; result is null") } shouldBe true
         }
     }
 

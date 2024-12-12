@@ -2,7 +2,7 @@
  * @(#) SpecExampleTest.kt
  *
  * kjson-yaml  Kotlin YAML processor
- * Copyright (c) 2023 Peter Wall
+ * Copyright (c) 2023, 2024 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,12 +26,12 @@
 package io.kjson.yaml.parser
 
 import kotlin.test.Test
-import kotlin.test.assertIs
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 import kotlin.test.expect
 
 import java.io.File
+
+import io.kstuff.test.shouldBe
+import io.kstuff.test.shouldBeType
 
 import io.kjson.JSONArray
 import io.kjson.JSONBoolean
@@ -51,11 +51,11 @@ class SpecExampleTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONArray>(this)
-            expect(3) { size }
-            expect(JSONString("Mark McGwire")) { this[0] }
-            expect(JSONString("Sammy Sosa")) { this[1] }
-            expect(JSONString("Ken Griffey")) { this[2] }
+            shouldBeType<JSONArray>()
+            size shouldBe 3
+            this[0] shouldBe JSONString("Mark McGwire")
+            this[1] shouldBe JSONString("Sammy Sosa")
+            this[2] shouldBe JSONString("Ken Griffey")
         }
     }
 
@@ -64,11 +64,11 @@ class SpecExampleTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONObject>(this)
-            expect(3) { size }
-            expect(JSONInt(65)) { this["hr"] }
-            expect(JSONDecimal("0.278")) { this["avg"] }
-            expect(JSONInt(147)) { this["rbi"] }
+            shouldBeType<JSONObject>()
+            size shouldBe 3
+            this["hr"] shouldBe JSONInt(65)
+            this["avg"] shouldBe JSONDecimal("0.278")
+            this["rbi"] shouldBe JSONInt(147)
         }
     }
 
@@ -77,21 +77,21 @@ class SpecExampleTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONObject>(this)
-            expect(2) { size }
+            shouldBeType<JSONObject>()
+            size shouldBe 2
             with(this["american"]) {
-                assertIs<JSONArray>(this)
-                expect(3) { size }
-                expect(JSONString("Boston Red Sox")) { this[0] }
-                expect(JSONString("Detroit Tigers")) { this[1] }
-                expect(JSONString("New York Yankees")) { this[2] }
+                shouldBeType<JSONArray>()
+                size shouldBe 3
+                this[0] shouldBe JSONString("Boston Red Sox")
+                this[1] shouldBe JSONString("Detroit Tigers")
+                this[2] shouldBe JSONString("New York Yankees")
             }
             with(this["national"]) {
-                assertIs<JSONArray>(this)
-                expect(3) { size }
-                expect(JSONString("New York Mets")) { this[0] }
-                expect(JSONString("Chicago Cubs")) { this[1] }
-                expect(JSONString("Atlanta Braves")) { this[2] }
+                shouldBeType<JSONArray>()
+                size shouldBe 3
+                this[0] shouldBe JSONString("New York Mets")
+                this[1] shouldBe JSONString("Chicago Cubs")
+                this[2] shouldBe JSONString("Atlanta Braves")
             }
         }
     }
@@ -101,21 +101,21 @@ class SpecExampleTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONArray>(this)
-            expect(2) { size }
+            shouldBeType<JSONArray>()
+            size shouldBe 2
             with(this[0]) {
-                assertIs<JSONObject>(this)
-                expect(3) { size }
-                expect(JSONString("Mark McGwire")) { this["name"] }
-                expect(JSONInt(65)) { this["hr"] }
-                expect(JSONDecimal("0.278")) { this["avg"] }
+                shouldBeType<JSONObject>()
+                size shouldBe 3
+                this["name"] shouldBe JSONString("Mark McGwire")
+                this["hr"] shouldBe JSONInt(65)
+                this["avg"] shouldBe JSONDecimal("0.278")
             }
             with(this[1]) {
-                assertIs<JSONObject>(this)
-                expect(3) { size }
-                expect(JSONString("Sammy Sosa")) { this["name"] }
-                expect(JSONInt(63)) { this["hr"] }
-                expect(JSONDecimal("0.288")) { this["avg"] }
+                shouldBeType<JSONObject>()
+                size shouldBe 3
+                this["name"] shouldBe JSONString("Sammy Sosa")
+                this["hr"] shouldBe JSONInt(63)
+                this["avg"] shouldBe JSONDecimal("0.288")
             }
         }
     }
@@ -125,28 +125,28 @@ class SpecExampleTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONArray>(this)
-            expect(3) { size }
+            shouldBeType<JSONArray>()
+            size shouldBe 3
             with(this[0]) {
-                assertIs<JSONArray>(this)
-                expect(3) { size }
-                expect(JSONString("name")) { this[0] }
-                expect(JSONString("hr")) { this[1] }
-                expect(JSONString("avg")) { this[2] }
+                shouldBeType<JSONArray>()
+                size shouldBe 3
+                this[0] shouldBe JSONString("name")
+                this[1] shouldBe JSONString("hr")
+                this[2] shouldBe JSONString("avg")
             }
             with(this[1]) {
-                assertIs<JSONArray>(this)
-                expect(3) { size }
-                expect(JSONString("Mark McGwire")) { this[0] }
-                expect(JSONInt(65)) { this[1] }
-                expect(JSONDecimal("0.278")) { this[2] }
+                shouldBeType<JSONArray>()
+                size shouldBe 3
+                this[0] shouldBe JSONString("Mark McGwire")
+                this[1] shouldBe JSONInt(65)
+                this[2] shouldBe JSONDecimal("0.278")
             }
             with(this[2]) {
-                assertIs<JSONArray>(this)
-                expect(3) { size }
-                expect(JSONString("Sammy Sosa")) { this[0] }
-                expect(JSONInt(63)) { this[1] }
-                expect(JSONDecimal("0.288")) { this[2] }
+                shouldBeType<JSONArray>()
+                size shouldBe 3
+                this[0] shouldBe JSONString("Sammy Sosa")
+                this[1] shouldBe JSONInt(63)
+                this[2] shouldBe JSONDecimal("0.288")
             }
         }
     }
@@ -156,19 +156,19 @@ class SpecExampleTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONObject>(this)
-            expect(2) { size }
+            shouldBeType<JSONObject>()
+            size shouldBe 2
             with(this["Mark McGwire"]) {
-                assertIs<JSONObject>(this)
-                expect(2) { size }
-                expect(JSONInt(65)) { this["hr"] }
-                expect(JSONDecimal("0.278")) { this["avg"] }
+                shouldBeType<JSONObject>()
+                size shouldBe 2
+                this["hr"] shouldBe JSONInt(65)
+                this["avg"] shouldBe JSONDecimal("0.278")
             }
             with(this["Sammy Sosa"]) {
-                assertIs<JSONObject>(this)
-                expect(2) { size }
-                expect(JSONInt(63)) { this["hr"] }
-                expect(JSONDecimal("0.288")) { this["avg"] }
+                shouldBeType<JSONObject>()
+                size shouldBe 2
+                this["hr"] shouldBe JSONInt(63)
+                this["avg"] shouldBe JSONDecimal("0.288")
             }
         }
     }
@@ -176,43 +176,43 @@ class SpecExampleTest {
     @Test fun `should parse example 2_7 correctly`() {
         val file = File("src/test/resources/spec_examples/spec_example_2.7.yaml")
         val result = Parser().parseStream(file)
-        expect(2) { result.size }
+        result.size shouldBe 2
         with(result[0].rootNode) {
             log.debug { this?.toJSON() }
-            assertIs<JSONArray>(this)
-            expect(3) { size }
-            expect(JSONString("Mark McGwire")) { this[0] }
-            expect(JSONString("Sammy Sosa")) { this[1] }
-            expect(JSONString("Ken Griffey")) { this[2] }
+            shouldBeType<JSONArray>()
+            size shouldBe 3
+            this[0] shouldBe JSONString("Mark McGwire")
+            this[1] shouldBe JSONString("Sammy Sosa")
+            this[2] shouldBe JSONString("Ken Griffey")
         }
         with(result[1].rootNode) {
             log.debug { this?.toJSON() }
-            assertIs<JSONArray>(this)
-            expect(2) { size }
-            expect(JSONString("Chicago Cubs")) { this[0] }
-            expect(JSONString("St Louis Cardinals")) { this[1] }
+            shouldBeType<JSONArray>()
+            size shouldBe 2
+            this[0] shouldBe JSONString("Chicago Cubs")
+            this[1] shouldBe JSONString("St Louis Cardinals")
         }
     }
 
     @Test fun `should parse example 2_8 correctly`() {
         val file = File("src/test/resources/spec_examples/spec_example_2.8.yaml")
         val result = Parser().parseStream(file)
-        expect(2) { result.size }
+        result.size shouldBe 2
         with(result[0].rootNode) {
             log.debug { this?.toJSON() }
-            assertIs<JSONObject>(this)
-            expect(3) { size }
-            expect(JSONString("20:03:20")) { this["time"] }
-            expect(JSONString("Sammy Sosa")) { this["player"] }
-            expect(JSONString("strike (miss)")) { this["action"] }
+            shouldBeType<JSONObject>()
+            size shouldBe 3
+            this["time"] shouldBe JSONString("20:03:20")
+            this["player"] shouldBe JSONString("Sammy Sosa")
+            this["action"] shouldBe JSONString("strike (miss)")
         }
         with(result[1].rootNode) {
             log.debug { this?.toJSON() }
-            assertIs<JSONObject>(this)
-            expect(3) { size }
-            expect(JSONString("20:03:47")) { this["time"] }
-            expect(JSONString("Sammy Sosa")) { this["player"] }
-            expect(JSONString("grand slam")) { this["action"] }
+            shouldBeType<JSONObject>()
+            size shouldBe 3
+            this["time"] shouldBe JSONString("20:03:47")
+            this["player"] shouldBe JSONString("Sammy Sosa")
+            this["action"] shouldBe JSONString("grand slam")
         }
     }
 
@@ -221,19 +221,19 @@ class SpecExampleTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONObject>(this)
-            expect(2) { size }
+            shouldBeType<JSONObject>()
+            size shouldBe 2
             with(this["hr"]) {
-                assertIs<JSONArray>(this)
-                expect(2) { size }
-                expect(JSONString("Mark McGwire")) { this[0] }
-                expect(JSONString("Sammy Sosa")) { this[1] }
+                shouldBeType<JSONArray>()
+                size shouldBe 2
+                this[0] shouldBe JSONString("Mark McGwire")
+                this[1] shouldBe JSONString("Sammy Sosa")
             }
             with(this["rbi"]) {
-                assertIs<JSONArray>(this)
-                expect(2) { size }
-                expect(JSONString("Sammy Sosa")) { this[0] }
-                expect(JSONString("Ken Griffey")) { this[1] }
+                shouldBeType<JSONArray>()
+                size shouldBe 2
+                this[0] shouldBe JSONString("Sammy Sosa")
+                this[1] shouldBe JSONString("Ken Griffey")
             }
         }
     }
@@ -243,19 +243,19 @@ class SpecExampleTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONObject>(this)
-            expect(2) { size }
+            shouldBeType<JSONObject>()
+            size shouldBe 2
             with(this["hr"]) {
-                assertIs<JSONArray>(this)
-                expect(2) { size }
-                expect(JSONString("Mark McGwire")) { this[0] }
-                expect(JSONString("Sammy Sosa")) { this[1] }
+                shouldBeType<JSONArray>()
+                size shouldBe 2
+                this[0] shouldBe JSONString("Mark McGwire")
+                this[1] shouldBe JSONString("Sammy Sosa")
             }
             with(this["rbi"]) {
-                assertIs<JSONArray>(this)
-                expect(2) { size }
-                expect(JSONString("Sammy Sosa")) { this[0] }
-                expect(JSONString("Ken Griffey")) { this[1] }
+                shouldBeType<JSONArray>()
+                size shouldBe 2
+                this[0] shouldBe JSONString("Sammy Sosa")
+                this[1] shouldBe JSONString("Ken Griffey")
             }
         }
     }
@@ -265,27 +265,27 @@ class SpecExampleTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONObject>(this)
-            expect(2) { size }
+            shouldBeType<JSONObject>()
+            size shouldBe 2
             val key1 = JSONArray.build {
                 add("Detroit Tigers")
                 add("Chicago cubs")
             }
             with(this[key1.toJSON()]) {
-                assertIs<JSONArray>(this)
-                expect(1) { size }
-                expect(JSONString("2001-07-23")) { this[0] }
+                shouldBeType<JSONArray>()
+                size shouldBe 1
+                this[0] shouldBe JSONString("2001-07-23")
             }
             val key2 = JSONArray.build {
                 add("New York Yankees")
                 add("Atlanta Braves")
             }
             with(this[key2.toJSON()]) {
-                assertIs<JSONArray>(this)
-                expect(3) { size }
-                expect(JSONString("2001-07-02")) { this[0] }
-                expect(JSONString("2001-08-12")) { this[1] }
-                expect(JSONString("2001-08-14")) { this[2] }
+                shouldBeType<JSONArray>()
+                size shouldBe 3
+                this[0] shouldBe JSONString("2001-07-02")
+                this[1] shouldBe JSONString("2001-08-12")
+                this[2] shouldBe JSONString("2001-08-14")
             }
         }
     }
@@ -295,25 +295,25 @@ class SpecExampleTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONArray>(this)
-            expect(3) { size }
+            shouldBeType<JSONArray>()
+            size shouldBe 3
             with(this[0]) {
-                assertIs<JSONObject>(this)
-                expect(2) { size }
-                expect(JSONString("Super Hoop")) { this["item"] }
-                expect(JSONInt(1)) { this["quantity"] }
+                shouldBeType<JSONObject>()
+                size shouldBe 2
+                this["item"] shouldBe JSONString("Super Hoop")
+                this["quantity"] shouldBe JSONInt(1)
             }
             with(this[1]) {
-                assertIs<JSONObject>(this)
-                expect(2) { size }
-                expect(JSONString("Basketball")) { this["item"] }
-                expect(JSONInt(4)) { this["quantity"] }
+                shouldBeType<JSONObject>()
+                size shouldBe 2
+                this["item"] shouldBe JSONString("Basketball")
+                this["quantity"] shouldBe JSONInt(4)
             }
             with(this[2]) {
-                assertIs<JSONObject>(this)
-                expect(2) { size }
-                expect(JSONString("Big Shoes")) { this["item"] }
-                expect(JSONInt(1)) { this["quantity"] }
+                shouldBeType<JSONObject>()
+                size shouldBe 2
+                this["item"] shouldBe JSONString("Big Shoes")
+                this["quantity"] shouldBe JSONInt(1)
             }
         }
     }
@@ -322,14 +322,14 @@ class SpecExampleTest {
         val file = File("src/test/resources/spec_examples/spec_example_2.13.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect(JSONString("\\//||\\/||\n// ||  ||__\n")) { result.rootNode }
+        result.rootNode shouldBe JSONString("\\//||\\/||\n// ||  ||__\n")
     }
 
     @Test fun `should parse example 2_14 correctly`() {
         val file = File("src/test/resources/spec_examples/spec_example_2.14.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect(JSONString("Mark McGwire's year was crippled by a knee injury.\n")) { result.rootNode }
+        result.rootNode shouldBe JSONString("Mark McGwire's year was crippled by a knee injury.\n")
     }
 
     @Test fun `should parse example 2_15 correctly`() {
@@ -345,11 +345,11 @@ class SpecExampleTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONObject>(this)
-            expect(3) { size }
-            expect(JSONString("Mark McGwire")) { this["name"] }
-            expect(JSONString("Mark set a major league home run record in 1998.\n")) { this["accomplishment"] }
-            expect(JSONString("65 Home Runs\n0.278 Batting Average\n")) { this["stats"] }
+            shouldBeType<JSONObject>()
+            size shouldBe 3
+            this["name"] shouldBe JSONString("Mark McGwire")
+            this["accomplishment"] shouldBe JSONString("Mark set a major league home run record in 1998.\n")
+            this["stats"] shouldBe JSONString("65 Home Runs\n0.278 Batting Average\n")
         }
     }
 
@@ -358,14 +358,14 @@ class SpecExampleTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONObject>(this)
-            expect(6) { size }
-            expect(JSONString("Sosa did fine.\u263A")) { this["unicode"] }
-            expect(JSONString("\b1998\t1999\t2000\n")) { this["control"] }
-            expect(JSONString("\r\n is \r\n")) { this["hex esc"] }
-            expect(JSONString("\"Howdy!\" he cried.")) { this["single"] }
-            expect(JSONString(" # Not a 'comment'.")) { this["quoted"] }
-            expect(JSONString("|\\-*-/|")) { this["tie-fighter"] }
+            shouldBeType<JSONObject>()
+            size shouldBe 6
+            this["unicode"] shouldBe JSONString("Sosa did fine.\u263A")
+            this["control"] shouldBe JSONString("\b1998\t1999\t2000\n")
+            this["hex esc"] shouldBe JSONString("\r\n is \r\n")
+            this["single"] shouldBe JSONString("\"Howdy!\" he cried.")
+            this["quoted"] shouldBe JSONString(" # Not a 'comment'.")
+            this["tie-fighter"] shouldBe JSONString("|\\-*-/|")
         }
     }
 
@@ -374,10 +374,10 @@ class SpecExampleTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONObject>(this)
-            expect(2) { size }
-            expect(JSONString("This unquoted scalar spans many lines.")) { this["plain"] }
-            expect(JSONString("So does this quoted scalar.\n")) { this["quoted"] }
+            shouldBeType<JSONObject>()
+            size shouldBe 2
+            this["plain"] shouldBe JSONString("This unquoted scalar spans many lines.")
+            this["quoted"] shouldBe JSONString("So does this quoted scalar.\n")
         }
     }
 
@@ -386,12 +386,12 @@ class SpecExampleTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONObject>(this)
-            expect(4) { size }
-            expect(JSONInt(12345)) { this["canonical"] }
-            expect(JSONInt(12345)) { this["decimal"] }
-            expect(JSONInt(12)) { this["octal"] }
-            expect(JSONInt(12)) { this["hexadecimal"] }
+            shouldBeType<JSONObject>()
+            size shouldBe 4
+            this["canonical"] shouldBe JSONInt(12345)
+            this["decimal"] shouldBe JSONInt(12345)
+            this["octal"] shouldBe JSONInt(12)
+            this["hexadecimal"] shouldBe JSONInt(12)
         }
     }
 
@@ -400,14 +400,14 @@ class SpecExampleTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONObject>(this)
-            expect(5) { size }
-            expect(JSONDecimal("1.23015e+3")) { this["canonical"] }
-            expect(JSONDecimal("12.3015e+02")) { this["exponential"] }
-            expect(JSONDecimal("1230.15")) { this["fixed"] }
-            expect(JSONString("-.inf")) { this["negative infinity"] }
+            shouldBeType<JSONObject>()
+            size shouldBe 5
+            this["canonical"] shouldBe JSONDecimal("1.23015e+3")
+            this["exponential"] shouldBe JSONDecimal("12.3015e+02")
+            this["fixed"] shouldBe JSONDecimal("1230.15")
+            this["negative infinity"] shouldBe JSONString("-.inf")
             expect(floatTag) { result.getTag(JSONPointer("/negative infinity"))}
-            expect(JSONString(".nan")) { this["not a number"] }
+            this["not a number"] shouldBe JSONString(".nan")
             expect(floatTag) { result.getTag(JSONPointer("/not a number"))}
         }
     }
@@ -417,15 +417,15 @@ class SpecExampleTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONObject>(this)
-            expect(3) { size }
-            assertNull(this["null"])
+            shouldBeType<JSONObject>()
+            size shouldBe 3
+            this["null"] shouldBe null
             with(this["booleans"]) {
-                assertIs<JSONArray>(this)
-                expect(JSONBoolean.TRUE) { this[0] }
-                expect(JSONBoolean.FALSE) { this[1] }
+                shouldBeType<JSONArray>()
+                this[0] shouldBe JSONBoolean.TRUE
+                this[1] shouldBe JSONBoolean.FALSE
             }
-            expect(JSONString("012345")) { this["string"] }
+            this["string"] shouldBe JSONString("012345")
         }
     }
 
@@ -434,12 +434,12 @@ class SpecExampleTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONObject>(this)
-            expect(4) { size }
-            expect(JSONString("2001-12-15T02:59:43.1Z")) { this["canonical"] }
-            expect(JSONString("2001-12-14t21:59:43.10-05:00")) { this["iso8601"] }
-            expect(JSONString("2001-12-14 21:59:43.10 -5")) { this["spaced"] }
-            expect(JSONString("2002-12-14")) { this["date"] }
+            shouldBeType<JSONObject>()
+            size shouldBe 4
+            this["canonical"] shouldBe JSONString("2001-12-15T02:59:43.1Z")
+            this["iso8601"] shouldBe JSONString("2001-12-14t21:59:43.10-05:00")
+            this["spaced"] shouldBe JSONString("2001-12-14 21:59:43.10 -5")
+            this["date"] shouldBe JSONString("2002-12-14")
         }
     }
 
@@ -448,9 +448,9 @@ class SpecExampleTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONObject>(this)
-            expect(3) { size }
-            expect(JSONString("2002-04-28")) { this["not-date"] }
+            shouldBeType<JSONObject>()
+            size shouldBe 3
+            this["not-date"] shouldBe JSONString("2002-04-28")
             expect(strTag) { result.getTag(JSONPointer("/not-date"))}
             expect(JSONString("R0lGODlhDAAMAIQAAP//9/X\n17unp5WZmZgAAAOfn515eXv\n" +
                     "Pz7Y6OjuDg4J+fn5OTk6enp\n56enmleECcgggoBADs=\n")) { this["picture"] }
@@ -466,48 +466,48 @@ class SpecExampleTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONArray>(this)
-            expect(3) { size }
+            shouldBeType<JSONArray>()
+            size shouldBe 3
             with(this[0]) {
-                assertIs<JSONObject>(this)
-                expect(2) { size }
+                shouldBeType<JSONObject>()
+                size shouldBe 2
                 with(this["center"]) {
-                    assertIs<JSONObject>(this)
-                    expect(2) { size }
+                    shouldBeType<JSONObject>()
+                    size shouldBe 2
                     expect(JSONInt(73)) { this["x"]}
                     expect(JSONInt(129)) { this["y"]}
                 }
-                expect(JSONInt(7)) { this["radius"] }
+                this["radius"] shouldBe JSONInt(7)
             }
             expect("tag:clarkevans.com,2002:circle") { result.getTag(JSONPointer("/0"))}
             with(this[1]) {
-                assertIs<JSONObject>(this)
-                expect(2) { size }
+                shouldBeType<JSONObject>()
+                size shouldBe 2
                 with(this["start"]) {
-                    assertIs<JSONObject>(this)
-                    expect(2) { size }
+                    shouldBeType<JSONObject>()
+                    size shouldBe 2
                     expect(JSONInt(73)) { this["x"]}
                     expect(JSONInt(129)) { this["y"]}
                 }
                 with(this["finish"]) {
-                    assertIs<JSONObject>(this)
-                    expect(2) { size }
+                    shouldBeType<JSONObject>()
+                    size shouldBe 2
                     expect(JSONInt(89)) { this["x"]}
                     expect(JSONInt(102)) { this["y"]}
                 }
             }
             expect("tag:clarkevans.com,2002:line") { result.getTag(JSONPointer("/1"))}
             with(this[2]) {
-                assertIs<JSONObject>(this)
-                expect(3) { size }
+                shouldBeType<JSONObject>()
+                size shouldBe 3
                 with(this["start"]) {
-                    assertIs<JSONObject>(this)
-                    expect(2) { size }
+                    shouldBeType<JSONObject>()
+                    size shouldBe 2
                     expect(JSONInt(73)) { this["x"]}
                     expect(JSONInt(129)) { this["y"]}
                 }
-                expect(JSONInt(0xFFEEBB)) { this["color"] }
-                expect(JSONString("Pretty vector drawing.")) { this["text"] }
+                this["color"] shouldBe JSONInt(0xFFEEBB)
+                this["text"] shouldBe JSONString("Pretty vector drawing.")
             }
             expect("tag:clarkevans.com,2002:label") { result.getTag(JSONPointer("/2"))}
         }
@@ -519,14 +519,14 @@ class SpecExampleTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONObject>(this)
-            expect(3) { size }
-            assertTrue(containsKey("Mark McGwire"))
-            assertNull(this["Mark McGwire"])
-            assertTrue(containsKey("Sammy Sosa"))
-            assertNull(this["Sammy Sosa"])
-            assertTrue(containsKey("Ken Griffey"))
-            assertNull(this["Ken Griffey"])
+            shouldBeType<JSONObject>()
+            size shouldBe 3
+            containsKey("Mark McGwire") shouldBe true
+            this["Mark McGwire"] shouldBe null
+            containsKey("Sammy Sosa") shouldBe true
+            this["Sammy Sosa"] shouldBe null
+            containsKey("Ken Griffey") shouldBe true
+            this["Ken Griffey"] shouldBe null
         }
         expect("tag:yaml.org,2002:set") { result.getTag(JSONPointer.root)}
     }
@@ -536,21 +536,21 @@ class SpecExampleTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONArray>(this)
-            expect(3) { size }
+            shouldBeType<JSONArray>()
+            size shouldBe 3
             with(this[0]) {
-                assertIs<JSONObject>(this)
-                expect(1) { size }
+                shouldBeType<JSONObject>()
+                size shouldBe 1
                 expect(JSONInt(65)) { this["Mark McGwire"]}
             }
             with(this[1]) {
-                assertIs<JSONObject>(this)
-                expect(1) { size }
+                shouldBeType<JSONObject>()
+                size shouldBe 1
                 expect(JSONInt(63)) { this["Sammy Sosa"]}
             }
             with(this[2]) {
-                assertIs<JSONObject>(this)
-                expect(1) { size }
+                shouldBeType<JSONObject>()
+                size shouldBe 1
                 expect(JSONInt(58)) { this["Ken Griffey"]}
             }
         }
@@ -562,59 +562,59 @@ class SpecExampleTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONObject>(this)
-            expect(8) { size }
-            expect(JSONInt(34843)) { this["invoice"] }
+            shouldBeType<JSONObject>()
+            size shouldBe 8
+            this["invoice"] shouldBe JSONInt(34843)
             with(this["bill-to"]) {
-                assertIs<JSONObject>(this)
-                expect(3) { size }
-                expect(JSONString("Chris")) { this["given"] }
-                expect(JSONString("Dumars")) { this["family"] }
+                shouldBeType<JSONObject>()
+                size shouldBe 3
+                this["given"] shouldBe JSONString("Chris")
+                this["family"] shouldBe JSONString("Dumars")
                 with(this["address"]) {
-                    assertIs<JSONObject>(this)
-                    expect(4) { size }
-                    expect(JSONString("458 Walkman Dr.\nSuite #292\n")) { this["lines"] }
-                    expect(JSONString("Royal Oak")) { this["city"] }
-                    expect(JSONString("MI")) { this["state"] }
-                    expect(JSONInt(48046)) { this["postal"] }
+                    shouldBeType<JSONObject>()
+                    size shouldBe 4
+                    this["lines"] shouldBe JSONString("458 Walkman Dr.\nSuite #292\n")
+                    this["city"] shouldBe JSONString("Royal Oak")
+                    this["state"] shouldBe JSONString("MI")
+                    this["postal"] shouldBe JSONInt(48046)
                 }
             }
             with(this["ship-to"]) {
-                assertIs<JSONObject>(this)
-                expect(3) { size }
-                expect(JSONString("Chris")) { this["given"] }
-                expect(JSONString("Dumars")) { this["family"] }
+                shouldBeType<JSONObject>()
+                size shouldBe 3
+                this["given"] shouldBe JSONString("Chris")
+                this["family"] shouldBe JSONString("Dumars")
                 with(this["address"]) {
-                    assertIs<JSONObject>(this)
-                    expect(4) { size }
-                    expect(JSONString("458 Walkman Dr.\nSuite #292\n")) { this["lines"] }
-                    expect(JSONString("Royal Oak")) { this["city"] }
-                    expect(JSONString("MI")) { this["state"] }
-                    expect(JSONInt(48046)) { this["postal"] }
+                    shouldBeType<JSONObject>()
+                    size shouldBe 4
+                    this["lines"] shouldBe JSONString("458 Walkman Dr.\nSuite #292\n")
+                    this["city"] shouldBe JSONString("Royal Oak")
+                    this["state"] shouldBe JSONString("MI")
+                    this["postal"] shouldBe JSONInt(48046)
                 }
             }
             with(this["product"]) {
-                assertIs<JSONArray>(this)
-                expect(2) { size }
+                shouldBeType<JSONArray>()
+                size shouldBe 2
                 with(this[0]) {
-                    assertIs<JSONObject>(this)
-                    expect(4) { size }
-                    expect(JSONString("BL394D")) { this["sku"] }
-                    expect(JSONInt(4)) { this["quantity"] }
-                    expect(JSONString("Basketball")) { this["description"] }
-                    expect(JSONDecimal("450.00")) { this["price"] }
+                    shouldBeType<JSONObject>()
+                    size shouldBe 4
+                    this["sku"] shouldBe JSONString("BL394D")
+                    this["quantity"] shouldBe JSONInt(4)
+                    this["description"] shouldBe JSONString("Basketball")
+                    this["price"] shouldBe JSONDecimal("450.00")
                 }
                 with(this[1]) {
-                    assertIs<JSONObject>(this)
-                    expect(4) { size }
-                    expect(JSONString("BL4438H")) { this["sku"] }
-                    expect(JSONInt(1)) { this["quantity"] }
-                    expect(JSONString("Super Hoop")) { this["description"] }
-                    expect(JSONDecimal("2392.00")) { this["price"] }
+                    shouldBeType<JSONObject>()
+                    size shouldBe 4
+                    this["sku"] shouldBe JSONString("BL4438H")
+                    this["quantity"] shouldBe JSONInt(1)
+                    this["description"] shouldBe JSONString("Super Hoop")
+                    this["price"] shouldBe JSONDecimal("2392.00")
                 }
             }
-            expect(JSONDecimal("251.42")) { this["tax"] }
-            expect(JSONDecimal("4443.52")) { this["total"] }
+            this["tax"] shouldBe JSONDecimal("251.42")
+            this["total"] shouldBe JSONDecimal("4443.52")
             expect(JSONString("Late afternoon is best. Backup contact is Nancy Billsmer" +
                     " @ 338-4338.")) { this["comments"] }
         }
@@ -624,43 +624,43 @@ class SpecExampleTest {
     @Test fun `should parse example 2_28 correctly`() {
         val file = File("src/test/resources/spec_examples/spec_example_2.28.yaml")
         val result = Parser().parseStream(file)
-        expect(3) { result.size }
+        result.size shouldBe 3
         with(result[0].rootNode) {
             log.debug { this?.toJSON() }
-            assertIs<JSONObject>(this)
-            expect(3) { size }
-            expect(JSONString("2001-11-23 15:01:42 -5")) { this["Time"] }
-            expect(JSONString("ed")) { this["User"] }
-            expect(JSONString("This is an error message for the log file")) { this["Warning"] }
+            shouldBeType<JSONObject>()
+            size shouldBe 3
+            this["Time"] shouldBe JSONString("2001-11-23 15:01:42 -5")
+            this["User"] shouldBe JSONString("ed")
+            this["Warning"] shouldBe JSONString("This is an error message for the log file")
         }
         with(result[1].rootNode) {
             log.debug { this?.toJSON() }
-            assertIs<JSONObject>(this)
-            expect(3) { size }
-            expect(JSONString("2001-11-23 15:02:31 -5")) { this["Time"] }
-            expect(JSONString("ed")) { this["User"] }
-            expect(JSONString("A slightly different error message.")) { this["Warning"] }
+            shouldBeType<JSONObject>()
+            size shouldBe 3
+            this["Time"] shouldBe JSONString("2001-11-23 15:02:31 -5")
+            this["User"] shouldBe JSONString("ed")
+            this["Warning"] shouldBe JSONString("A slightly different error message.")
         }
         with(result[2].rootNode) {
             log.debug { this?.toJSON() }
-            assertIs<JSONObject>(this)
-            expect(4) { size }
-            expect(JSONString("2001-11-23 15:03:17 -5")) { this["Date"] }
-            expect(JSONString("ed")) { this["User"] }
-            expect(JSONString("Unknown variable \"bar\"")) { this["Fatal"] }
+            shouldBeType<JSONObject>()
+            size shouldBe 4
+            this["Date"] shouldBe JSONString("2001-11-23 15:03:17 -5")
+            this["User"] shouldBe JSONString("ed")
+            this["Fatal"] shouldBe JSONString("Unknown variable \"bar\"")
             with(this["Stack"]) {
-                assertIs<JSONArray>(this)
-                expect(2) { size }
+                shouldBeType<JSONArray>()
+                size shouldBe 2
                 with(this[0]) {
-                    assertIs<JSONObject>(this)
-                    expect(3) { size }
+                    shouldBeType<JSONObject>()
+                    size shouldBe 3
                     expect(JSONString("TopClass.py")) { this["file"]}
                     expect(JSONInt(23)) { this["line"]}
                     expect(JSONString("x = MoreObject(\"345\\n\")\n")) { this["code"]}
                 }
                 with(this[1]) {
-                    assertIs<JSONObject>(this)
-                    expect(3) { size }
+                    shouldBeType<JSONObject>()
+                    size shouldBe 3
                     expect(JSONString("MoreClass.py")) { this["file"]}
                     expect(JSONInt(58)) { this["line"]}
                     expect(JSONString("foo = bar")) { this["code"]}

@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>kjson-yaml</artifactId>
-  <version>3.3</version>
+  <version>3.4</version>
   <name>Kotlin YAML processor</name>
   <packaging>jar</packaging>
   <url>https://github.com/pwall567/kjson-yaml</url>
@@ -62,12 +62,12 @@
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>kjson-core</artifactId>
-      <version>9.1</version>
+      <version>9.2</version>
     </dependency>
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>kjson-pointer</artifactId>
-      <version>8.3</version>
+      <version>8.4</version>
     </dependency>
     <dependency>
       <groupId>net.pwall.text</groupId>
@@ -92,6 +92,12 @@
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-stdlib-jdk8</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.kstuff</groupId>
+      <artifactId>should-test</artifactId>
+      <version>4.0</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>

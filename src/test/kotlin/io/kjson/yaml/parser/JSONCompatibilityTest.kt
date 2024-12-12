@@ -1,8 +1,8 @@
 /*
- * @(#) NoCommitJSONCompatibilityTest.kt
+ * @(#) JSONCompatibilityTest.kt
  *
  * kjson-yaml  Kotlin YAML processor
- * Copyright (c) 2020, 2021 Peter Wall
+ * Copyright (c) 2020, 2021, 2024 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,9 +26,10 @@
 package io.kjson.yaml.parser
 
 import kotlin.test.Test
-import kotlin.test.expect
 
 import java.io.File
+
+import io.kstuff.test.shouldBe
 
 import io.kjson.JSON
 
@@ -37,7 +38,7 @@ class JSONCompatibilityTest {
     @Test fun `should create identical structure for matching YAML and JSON`() {
         val json = JSON.parse(File("src/test/resources/example.schema.json").readText())
         val yaml = Parser().parse(File("src/test/resources/example.schema.yaml"))
-        expect(json) { yaml.rootNode }
+        yaml.rootNode shouldBe json
     }
 
 }

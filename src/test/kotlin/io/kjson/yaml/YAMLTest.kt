@@ -2,7 +2,7 @@
  * @(#) YAMLTest.kt
  *
  * kjson-yaml  Kotlin YAML processor
- * Copyright (c) 2020, 2021, 2023 Peter Wall
+ * Copyright (c) 2020, 2021, 2023, 2024 Peter Wall
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,9 +26,10 @@
 package io.kjson.yaml
 
 import kotlin.test.Test
-import kotlin.test.expect
 
 import java.io.File
+
+import io.kstuff.test.shouldBe
 
 import io.kjson.JSON.asObject
 import io.kjson.JSON.asString
@@ -38,21 +39,21 @@ class YAMLTest {
     @Test fun `should use YAML object functions`() {
         val file = File("src/test/resources/keyblock.yaml")
         val result = YAML.parse(file)
-        expect("data") { result.rootNode.asObject["key"].asString }
+        result.rootNode.asObject["key"].asString shouldBe "data"
         val inputStream = file.inputStream()
-        expect("data") { YAML.parse(inputStream).rootNode.asObject["key"].asString }
+        YAML.parse(inputStream).rootNode.asObject["key"].asString shouldBe "data"
         val reader = file.reader()
-        expect("data") { YAML.parse(reader).rootNode.asObject["key"].asString }
+        YAML.parse(reader).rootNode.asObject["key"].asString shouldBe "data"
     }
 
     @Test fun `should use YAML object functions for multi-document streams`() {
         val file = File("src/test/resources/keyblock.yaml")
         val result = YAML.parseStream(file)
-        expect("data") { result.single().rootNode.asObject["key"].asString }
+        result.single().rootNode.asObject["key"].asString shouldBe "data"
         val inputStream = file.inputStream()
-        expect("data") { YAML.parseStream(inputStream).single().rootNode.asObject["key"].asString }
+        YAML.parseStream(inputStream).single().rootNode.asObject["key"].asString shouldBe "data"
         val reader = file.reader()
-        expect("data") { YAML.parseStream(reader).single().rootNode.asObject["key"].asString }
+        YAML.parseStream(reader).single().rootNode.asObject["key"].asString shouldBe "data"
     }
 
 }

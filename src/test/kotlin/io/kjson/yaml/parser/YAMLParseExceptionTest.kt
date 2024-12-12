@@ -26,25 +26,26 @@
 package io.kjson.yaml.parser
 
 import kotlin.test.Test
-import kotlin.test.expect
+
+import io.kstuff.test.shouldBe
 
 class YAMLParseExceptionTest {
 
     @Test fun `should create YAMLParseException`() {
         val line = Line(8, "  Hello  ")
         val ype = YAMLParseException("Something went wrong", line)
-        expect("Something went wrong") { ype.text }
-        expect("Something went wrong, at 8:3") { ype.message }
-        expect(8) { ype.line.lineNumber }
+        ype.text shouldBe "Something went wrong"
+        ype.message shouldBe "Something went wrong, at 8:3"
+        ype.line.lineNumber shouldBe 8
     }
 
     @Test fun `should create YAMLParseException with nested exception`() {
         val line = Line(123, "XXX")
         val nested = IllegalArgumentException("Dummy")
         val ype = YAMLParseException("Oh no!", line).withCause(nested)
-        expect("Oh no!") { ype.text }
-        expect("Oh no!, at 123:1") { ype.message }
-        expect(nested) { ype.cause }
+        ype.text shouldBe "Oh no!"
+        ype.message shouldBe "Oh no!, at 123:1"
+        ype.cause shouldBe nested
     }
 
 }

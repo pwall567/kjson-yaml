@@ -26,20 +26,21 @@
 package io.kjson.yaml
 
 import kotlin.test.Test
-import kotlin.test.expect
+
+import io.kstuff.test.shouldBe
 
 class YAMLExceptionTest {
 
     @Test fun `should create YAMLException`() {
         val ye = YAMLException("Something went wrong")
-        expect("Something went wrong") { ye.message }
+        ye.message shouldBe "Something went wrong"
     }
 
     @Test fun `should create YAMLException with nested exception`() {
         val nested = IllegalArgumentException("Dummy")
         val ye = YAMLException("Oh no!").withCause(nested)
-        expect("Oh no!") { ye.message }
-        expect(nested) { ye.cause }
+        ye.message shouldBe "Oh no!"
+        ye.cause shouldBe nested
     }
 
 }

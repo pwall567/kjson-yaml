@@ -26,16 +26,16 @@
 package io.kjson.yaml.parser
 
 import kotlin.test.Test
-import kotlin.test.assertFailsWith
-import kotlin.test.assertIs
-import kotlin.test.assertNull
-import kotlin.test.assertSame
-import kotlin.test.expect
 import kotlin.test.fail
 
 import java.io.File
 import java.io.StringReader
 import java.math.BigDecimal
+
+import io.kstuff.test.shouldBe
+import io.kstuff.test.shouldBeSameInstance
+import io.kstuff.test.shouldBeType
+import io.kstuff.test.shouldThrow
 
 import io.kjson.JSON.asArray
 import io.kjson.JSON.asDecimal
@@ -63,101 +63,101 @@ class ParserTest {
     @Test fun `should return null document for empty file`() {
         val emptyFile = File("src/test/resources/empty.yaml")
         val result = Parser().parse(emptyFile)
-        expect(null) { result.rootNode }
+        result.rootNode shouldBe null
     }
 
     @Test fun `should return single null document for empty file as multi-document stream`() {
         val emptyFile = File("src/test/resources/empty.yaml")
         val result = Parser().parseStream(emptyFile)
-        expect(1) { result.size }
-        expect(null) { result[0].rootNode }
+        result.size shouldBe 1
+        result[0].rootNode shouldBe null
     }
 
     @Test fun `should return null document for empty file using InputStream`() {
         val inputStream = File("src/test/resources/empty.yaml").inputStream()
         val result = Parser().parse(inputStream)
-        expect(null) { result.rootNode }
+        result.rootNode shouldBe null
     }
 
     @Test fun `should return single null document for empty file as multi-document stream using InputStream`() {
         val inputStream = File("src/test/resources/empty.yaml").inputStream()
         val result = Parser().parseStream(inputStream)
-        expect(1) { result.size }
-        expect(null) { result[0].rootNode }
+        result.size shouldBe 1
+        result[0].rootNode shouldBe null
     }
 
     @Test fun `should return null document for empty file using Reader`() {
         val reader = File("src/test/resources/empty.yaml").reader()
         val result = Parser().parse(reader)
-        expect(null) { result.rootNode }
+        result.rootNode shouldBe null
     }
 
     @Test fun `should return single null document for empty file as multi-document stream using Reader`() {
         val reader = File("src/test/resources/empty.yaml").reader()
         val result = Parser().parseStream(reader)
-        expect(1) { result.size }
-        expect(null) { result[0].rootNode }
+        result.size shouldBe 1
+        result[0].rootNode shouldBe null
     }
 
     @Test fun `should process file starting with separator`() {
         val file = File("src/test/resources/separator1.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect("abc") { result.rootNode.asString }
+        result.rootNode.asString shouldBe "abc"
     }
 
     @Test fun `should process file starting with separator as multi-document stream`() {
         val file = File("src/test/resources/separator1.yaml")
         val result = Parser().parseStream(file)
-        expect(1) { result.size }
+        result.size shouldBe 1
         log.debug { result[0].rootNode?.toJSON() }
-        expect("abc") { result[0].rootNode.asString }
+        result[0].rootNode.asString shouldBe "abc"
     }
 
     @Test fun `should process file starting with separator and ending with terminator`() {
         val file = File("src/test/resources/separator2.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect("abc") { result.rootNode.asString }
-        expect(1) { result.majorVersion }
-        expect(2) { result.minorVersion }
+        result.rootNode.asString shouldBe "abc"
+        result.majorVersion shouldBe 1
+        result.minorVersion shouldBe 2
     }
 
     @Test fun `should process file starting with separator and ending with terminator as multi-document stream`() {
         val file = File("src/test/resources/separator2.yaml")
         val result = Parser().parseStream(file)
-        expect(1) { result.size }
+        result.size shouldBe 1
         log.debug { result[0].rootNode?.toJSON() }
-        expect("abc") { result[0].rootNode.asString }
-        expect(1) { result[0].majorVersion }
-        expect(2) { result[0].minorVersion }
+        result[0].rootNode.asString shouldBe "abc"
+        result[0].majorVersion shouldBe 1
+        result[0].minorVersion shouldBe 2
     }
 
     @Test fun `should process file starting with separator with comment`() {
         val file = File("src/test/resources/separator3.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect("Hello") { result.rootNode.asString }
-        expect(1) { result.majorVersion }
-        expect(2) { result.minorVersion }
+        result.rootNode.asString shouldBe "Hello"
+        result.majorVersion shouldBe 1
+        result.minorVersion shouldBe 2
     }
 
     @Test fun `should process file starting with YAML directive`() {
         val file = File("src/test/resources/directive1.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect("abc") { result.rootNode.asString }
-        expect(1) { result.majorVersion }
-        expect(2) { result.minorVersion }
+        result.rootNode.asString shouldBe "abc"
+        result.majorVersion shouldBe 1
+        result.minorVersion shouldBe 2
     }
 
     @Test fun `should process file starting with YAML 1 1 directive`() {
         val file = File("src/test/resources/directive2.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect("abc") { result.rootNode.asString }
-        expect(1) { result.majorVersion }
-        expect(1) { result.minorVersion }
+        result.rootNode.asString shouldBe "abc"
+        result.majorVersion shouldBe 1
+        result.minorVersion shouldBe 1
     }
 
     @Test fun `should process YAML 1 1 file allowing old constant types`() {
@@ -165,12 +165,12 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONArray>(this)
-            expect(4) { size }
-            expect(JSONBoolean.TRUE) { this[0] }
-            expect(JSONBoolean.FALSE) { this[1] }
-            expect(JSONInt(511)) { this[2] }
-            expect(JSONString("Yes")) { this[3] }
+            shouldBeType<JSONArray>()
+            size shouldBe 4
+            this[0] shouldBe JSONBoolean.TRUE
+            this[1] shouldBe JSONBoolean.FALSE
+            this[2] shouldBe JSONInt(511)
+            this[3] shouldBe JSONString("Yes")
         }
     }
 
@@ -179,12 +179,12 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         with(result.rootNode) {
-            assertIs<JSONArray>(this)
-            expect(4) { size }
-            expect(JSONString("Yes")) { this[0] }
-            expect(JSONString("No")) { this[1] }
-            expect(JSONInt(777)) { this[2] }
-            expect(JSONString("Yes")) { this[3] }
+            shouldBeType<JSONArray>()
+            size shouldBe 4
+            this[0] shouldBe JSONString("Yes")
+            this[1] shouldBe JSONString("No")
+            this[2] shouldBe JSONInt(777)
+            this[3] shouldBe JSONString("Yes")
         }
     }
 
@@ -192,30 +192,30 @@ class ParserTest {
         val file = File("src/test/resources/directive4.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect("abcdef") { result.rootNode.asString }
-        expect(1) { result.majorVersion }
-        expect(2) { result.minorVersion }
+        result.rootNode.asString shouldBe "abcdef"
+        result.majorVersion shouldBe 1
+        result.minorVersion shouldBe 2
     }
 
     @Test fun `should process file starting with YAML and TAG directives`() {
         val file = File("src/test/resources/tag1.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect("abc") { result.rootNode.asString }
-        expect(strTag) { result.getTag(JSONPointer.root) }
+        result.rootNode.asString shouldBe "abc"
+        result.getTag(JSONPointer.root) shouldBe strTag
     }
 
     @Test fun `should fail on YAML directive not 1 x`() {
         val file = File("src/test/resources/directive3.yaml")
-        assertFailsWith<YAMLException> { Parser().parse(file) }.let {
-            expect("%YAML version must be 1.x, at 1:10") { it.message }
+        shouldThrow<YAMLException>("%YAML version must be 1.x, at 1:10") {
+            Parser().parse(file)
         }
     }
 
     @Test fun `should fail on invalid TAG handle`() {
         val file = File("src/test/resources/tag99.yaml")
-        assertFailsWith<YAMLException> { Parser().parse(file) }.let {
-            expect("Illegal tag handle on %TAG directive, at 2:6") { it.message }
+        shouldThrow<YAMLException>("Illegal tag handle on %TAG directive, at 2:6") {
+            Parser().parse(file)
         }
     }
 
@@ -223,67 +223,67 @@ class ParserTest {
         val file = File("src/test/resources/plainscalar.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect("http://pwall.net/schema.json#/aaa") { result.rootNode.asString }
+        result.rootNode.asString shouldBe "http://pwall.net/schema.json#/aaa"
     }
 
     @Test fun `should process double quoted scalar`() {
         val file = File("src/test/resources/doublequotedscalar.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect("a b \n \r \" A A \u2014 A \uD83D\uDE02") { result.rootNode.asString }
+        result.rootNode.asString shouldBe "a b \n \r \" A A \u2014 A \uD83D\uDE02"
     }
 
     @Test fun `should process multi-line scalar`() {
         val file = File("src/test/resources/multilinescalar.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect("abc def ghi") { result.rootNode.asString }
+        result.rootNode.asString shouldBe "abc def ghi"
     }
 
     @Test fun `should process integer scalar`() {
         val file = File("src/test/resources/integerscalar.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect(123) { result.rootNode.asInt }
+        result.rootNode.asInt shouldBe 123
     }
 
     @Test fun `should process decimal scalar`() {
         val file = File("src/test/resources/decimalscalar.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect(BigDecimal("12345.67")) { result.rootNode.asDecimal }
+        result.rootNode.asDecimal shouldBe BigDecimal("12345.67")
     }
 
     @Test fun `should process simple key-value`() {
         val file = File("src/test/resources/keyvalue.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect("value") { result.rootNode.asObject["key"].asString }
+        result.rootNode.asObject["key"].asString shouldBe "value"
     }
 
     @Test fun `should process simple key-integer`() {
         val file = File("src/test/resources/keyinteger.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect(123) { result.rootNode.asObject["key"].asInt }
+        result.rootNode.asObject["key"].asInt shouldBe 123
     }
 
     @Test fun `should process simple block property`() {
         val file = File("src/test/resources/keyblock.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect("data") { result.rootNode.asObject["key"].asString }
+        result.rootNode.asObject["key"].asString shouldBe "data"
     }
 
     @Test fun `should process nested block property`() {
         val file = File("src/test/resources/nestedblock.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        result.rootNode.asObject.let {
-            expect(1) { it.size }
-            it["key"].asObject.let {
-                expect(1) { it.size }
-                expect("inner") { it["nested"].asString }
+        with(result.rootNode.asObject) {
+            size shouldBe 1
+            with(this["key"].asObject) {
+                size shouldBe 1
+                this["nested"].asString shouldBe "inner"
             }
         }
     }
@@ -293,10 +293,10 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         result.rootNode.asObject.let {
-            expect(3) { it.size }
-            expect("abc") { it["prop1"].asString }
-            expect(" X ") { it["prop2"].asString }
-            assertNull(it["prop3"])
+            it.size shouldBe 3
+            it["prop1"].asString shouldBe "abc"
+            it["prop2"].asString shouldBe " X "
+            it["prop3"] shouldBe null
         }
     }
 
@@ -304,7 +304,7 @@ class ParserTest {
         val file = File("src/test/resources/array1.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect("abc") { result.rootNode.asArray[0].asString }
+        result.rootNode.asArray[0].asString shouldBe "abc"
     }
 
     @Test fun `should process array with two items`() {
@@ -312,9 +312,9 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         result.rootNode.asArray.let {
-            expect(2) { it.size }
-            expect("abc") { it[0].asString }
-            expect("def") { it[1].asString }
+            it.size shouldBe 2
+            it[0].asString shouldBe "abc"
+            it[1].asString shouldBe "def"
         }
     }
 
@@ -322,7 +322,7 @@ class ParserTest {
         val file = File("src/test/resources/literalblockscalar.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect("hello\nworld\n") { result.rootNode.asObject["abc"].asString }
+        result.rootNode.asObject["abc"].asString shouldBe "hello\nworld\n"
     }
 
     @Test fun `should process flow sequence`() {
@@ -330,9 +330,9 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         result.rootNode.asArray.let {
-            expect(2) { it.size }
-            expect("abc") { it[0].asString }
-            expect("def") { it[1].asString }
+            it.size shouldBe 2
+            it[0].asString shouldBe "abc"
+            it[1].asString shouldBe "def"
         }
     }
 
@@ -341,10 +341,10 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         result.rootNode.asArray.let {
-            expect(3) { it.size }
-            expect("abc def") { it[0].asString }
-            expect("ghi") { it[1].asString }
-            expect("jkl") { it[2].asString }
+            it.size shouldBe 3
+            it[0].asString shouldBe "abc def"
+            it[1].asString shouldBe "ghi"
+            it[2].asString shouldBe "jkl"
         }
     }
 
@@ -353,18 +353,18 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         result.rootNode.asArray.let { sequence ->
-            expect(3) { sequence.size }
+            sequence.size shouldBe 3
             sequence[0].asObject.let {
-                expect(1) { it.size }
-                expect(123) { it["abc"].asInt }
+                it.size shouldBe 1
+                it["abc"].asInt shouldBe 123
             }
             sequence[1].asObject.let {
-                expect(1) { it.size }
-                expect(456) { it["abc"].asInt }
+                it.size shouldBe 1
+                it["abc"].asInt shouldBe 456
             }
             sequence[2].asObject.let {
-                expect(1) { it.size }
-                expect(789) { it["def"].asInt }
+                it.size shouldBe 1
+                it["def"].asInt shouldBe 789
             }
         }
     }
@@ -373,19 +373,19 @@ class ParserTest {
         val file = File("src/test/resources/flowsequence4.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        result.rootNode.asArray.let { sequence ->
-            expect(3) { sequence.size }
-            sequence[0].asArray.let {
-                expect(1) { it.size }
-                expect("abc") { it[0].asString }
+        with(result.rootNode.asArray) {
+            size shouldBe 3
+            with(this[0].asArray) {
+                size shouldBe 1
+                this[0].asString shouldBe "abc"
             }
-            sequence[1].asArray.let {
-                expect(2) { it.size }
-                expect("def") { it[0].asString }
-                expect(888) { it[1].asInt }
+            with(this[1].asArray) {
+                size shouldBe 2
+                this[0].asString shouldBe "def"
+                this[1].asInt shouldBe 888
             }
-            sequence[2].asArray.let {
-                expect(0) { it.size }
+            with(this[2].asArray) {
+                size shouldBe 0
             }
         }
     }
@@ -394,10 +394,10 @@ class ParserTest {
         val file = File("src/test/resources/flowmapping.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        result.rootNode.asObject.let {
-            expect(2) { it.size }
-            expect(1234) { it["abcde"].asInt }
-            expect("World!") { it["hello"].asString }
+        with(result.rootNode.asObject) {
+            size shouldBe 2
+            this["abcde"].asInt shouldBe 1234
+            this["hello"].asString shouldBe "World!"
         }
     }
 
@@ -406,13 +406,13 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         result.rootNode.asObject.let { outer ->
-            expect(1) { outer.size }
+            outer.size shouldBe 1
             outer["alpha"].asObject.let { inner ->
-                expect(1) { inner.size }
+                inner.size shouldBe 1
                 inner["beta"].asArray.let { array ->
-                    expect(2) { array.size }
-                    expect(123) { array[0].asInt }
-                    expect(456) { array[1].asInt }
+                    array.size shouldBe 2
+                    array[0].asInt shouldBe 123
+                    array[1].asInt shouldBe 456
                 }
             }
         }
@@ -423,13 +423,13 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         result.rootNode.asObject.let { outer ->
-            expect(1) { outer.size }
+            outer.size shouldBe 1
             outer["alpha"].asObject.let { inner ->
-                expect(1) { inner.size }
+                inner.size shouldBe 1
                 inner["beta"].asArray.let { array ->
-                    expect(2) { array.size }
-                    expect(123) { array[0].asInt }
-                    expect(789) { array[1].asInt }
+                    array.size shouldBe 2
+                    array[0].asInt shouldBe 123
+                    array[1].asInt shouldBe 789
                 }
             }
         }
@@ -440,13 +440,13 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         result.rootNode.asObject.let { outer ->
-            expect(1) { outer.size }
+            outer.size shouldBe 1
             outer["alpha"].asObject.let { inner ->
-                expect(1) { inner.size }
+                inner.size shouldBe 1
                 inner["beta"].asObject.let { third ->
-                    expect(2) { third.size }
-                    expect(123) { third["gamma"].asInt }
-                    expect(456) { third["delta"].asInt }
+                    third.size shouldBe 2
+                    third["gamma"].asInt shouldBe 123
+                    third["delta"].asInt shouldBe 456
                 }
             }
         }
@@ -457,13 +457,13 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         result.rootNode.asObject.let { outer ->
-            expect(1) { outer.size }
+            outer.size shouldBe 1
             outer["alpha"].asObject.let { inner ->
-                expect(1) { inner.size }
+                inner.size shouldBe 1
                 inner["beta"].asObject.let { third ->
-                    expect(2) { third.size }
-                    expect(123) { third["gamma"].asInt }
-                    expect(789) { third["epsilon"].asInt }
+                    third.size shouldBe 2
+                    third["gamma"].asInt shouldBe 123
+                    third["epsilon"].asInt shouldBe 789
                 }
             }
         }
@@ -474,23 +474,23 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         result.rootNode.asObject.let { outer ->
-            expect(1) { outer.size }
+            outer.size shouldBe 1
             outer["outer"].asArray.let { array ->
-                expect(3) { array.size }
+                array.size shouldBe 3
                 array[0].asObject.let { inner ->
-                    expect(2) { inner.size }
-                    expect("xxx") { inner["inner1"].asString }
-                    expect("alpha beta") { inner["inner2"].asString.trim() }
+                    inner.size shouldBe 2
+                    inner["inner1"].asString shouldBe "xxx"
+                    inner["inner2"].asString.trim() shouldBe "alpha beta"
                 }
                 array[1].asObject.let { inner ->
-                    expect(2) { inner.size }
-                    expect("yyy") { inner["inner1"].asString }
-                    expect("gamma delta") { inner["inner2"].asString.trim() }
+                    inner.size shouldBe 2
+                    inner["inner1"].asString shouldBe "yyy"
+                    inner["inner2"].asString.trim() shouldBe "gamma delta"
                 }
                 array[2].asObject.let { inner ->
-                    expect(2) { inner.size }
-                    expect("zzz") { inner["inner1"].asString }
-                    expect("epsilon") { inner["inner2"].asString.trim() }
+                    inner.size shouldBe 2
+                    inner["inner1"].asString shouldBe "zzz"
+                    inner["inner2"].asString.trim() shouldBe "epsilon"
                 }
             }
         }
@@ -501,12 +501,12 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         result.rootNode.asObject.let { outer ->
-            expect(1) { outer.size }
+            outer.size shouldBe 1
             outer["outer"].asObject.let { nested ->
-                expect(1) { nested.size }
+                nested.size shouldBe 1
                 nested["key1"].asObject.let { inner->
-                    expect(1) { inner.size }
-                    expect("value1") { inner["inner1"].asString }
+                    inner.size shouldBe 1
+                    inner["inner1"].asString shouldBe "value1"
                 }
             }
         }
@@ -517,16 +517,16 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         result.rootNode.asObject.let { outer ->
-            expect(1) { outer.size }
+            outer.size shouldBe 1
             outer["outer"].asArray.let { array ->
-                expect(2) { array.size }
+                array.size shouldBe 2
                 array[0].asObject.let { inner ->
-                    expect(1) { inner.size }
-                    expect("value1") { inner["inner"].asString }
+                    inner.size shouldBe 1
+                    inner["inner"].asString shouldBe "value1"
                 }
                 array[1].asObject.let { inner ->
-                    expect(1) { inner.size }
-                    expect("value2") { inner["inner"].asString }
+                    inner.size shouldBe 1
+                    inner["inner"].asString shouldBe "value2"
                 }
             }
         }
@@ -537,9 +537,9 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         result.rootNode.asObject.let { obj ->
-            expect(2) { obj.size }
-            expect("alphabet") { obj["first"].asString }
-            expect("alpha bet") { obj["second"].asString }
+            obj.size shouldBe 2
+            obj["first"].asString shouldBe "alphabet"
+            obj["second"].asString shouldBe "alpha bet"
         }
     }
 
@@ -548,16 +548,16 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         result.rootNode.asObject.let { obj ->
-            expect(2) { obj.size }
+            obj.size shouldBe 2
             obj["first"].asObject.let { first ->
-                expect(2) { first.size }
-                expect("value1") { first["key1"].asString }
-                expect("value2") { first["key2"].asString }
+                first.size shouldBe 2
+                first["key1"].asString shouldBe "value1"
+                first["key2"].asString shouldBe "value2"
             }
             obj["second"].asObject.let { second ->
-                expect(2) { second.size }
-                expect("value1") { second["key1"].asString }
-                expect("value2") { second["key2"].asString }
+                second.size shouldBe 2
+                second["key1"].asString shouldBe "value1"
+                second["key2"].asString shouldBe "value2"
             }
         }
     }
@@ -567,14 +567,14 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         result.rootNode.asObject.let { obj ->
-            expect(2) { obj.size }
+            obj.size shouldBe 2
             obj["abc"].asArray.let { abc ->
-                expect(3) { abc.size }
-                expect("first") { abc[0].asString }
-                expect("second") { abc[1].asString }
-                expect("third") { abc[2].asString }
+                abc.size shouldBe 3
+                abc[0].asString shouldBe "first"
+                abc[1].asString shouldBe "second"
+                abc[2].asString shouldBe "third"
             }
-            assertSame(obj["abc"], obj["def"])
+            obj["def"] shouldBeSameInstance obj["abc"]
         }
     }
 
@@ -583,10 +583,10 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         result.rootNode.asArray.let { arr ->
-            expect(3) { arr.size }
-            expect("abc") { arr[0].asString }
-            expect("def") { arr[1].asString }
-            assertSame(arr[0], arr[2])
+            arr.size shouldBe 3
+            arr[0].asString shouldBe "abc"
+            arr[1].asString shouldBe "def"
+            arr[2] shouldBeSameInstance arr[0]
         }
     }
 
@@ -595,11 +595,11 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         result.rootNode.asObject.let { obj ->
-            expect(2) { obj.size }
-            expect("a very long string") { obj["aaa"].asString }
+            obj.size shouldBe 2
+            obj["aaa"].asString shouldBe "a very long string"
             obj["bbb"].asArray.let { arr ->
-                assertSame(arr[0], obj["aaa"])
-                assertSame(arr[1], obj["aaa"])
+                obj["aaa"] shouldBeSameInstance arr[0]
+                obj["aaa"] shouldBeSameInstance arr[1]
             }
         }
     }
@@ -609,26 +609,26 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         result.rootNode.asObject.let { obj ->
-            expect(2) { obj.size }
-            expect("a very long string") { obj["aaa"].asString }
+            obj.size shouldBe 2
+            obj["aaa"].asString shouldBe "a very long string"
             obj["bbb"].asObject.let { innerObject ->
-                assertSame(innerObject["first"], obj["aaa"])
-                assertSame(innerObject["second"], obj["aaa"])
+                obj["aaa"] shouldBeSameInstance innerObject["first"]
+                obj["aaa"] shouldBeSameInstance innerObject["second"]
             }
         }
     }
 
     @Test fun `should throw exception on unknown anchor`() {
         val file = File("src/test/resources/anchorError1.yaml")
-        assertFailsWith<YAMLParseException> { Parser().parse(file) }.let {
-            expect("Can't locate alias \"unknown\", at 2:14") { it.message }
+        shouldThrow<YAMLParseException>("Can't locate alias \"unknown\", at 2:14") {
+            Parser().parse(file)
         }
     }
 
     @Test fun `should throw exception on recursive anchor`() {
         val file = File("src/test/resources/anchorError2.yaml")
-        assertFailsWith<YAMLParseException> { Parser().parse(file) }.let {
-            expect("Can't locate alias \"aaa\", at 2:12") { it.message }
+        shouldThrow<YAMLParseException>("Can't locate alias \"aaa\", at 2:12") {
+            Parser().parse(file)
         }
     }
 
@@ -637,137 +637,137 @@ class ParserTest {
         val result = Parser().parse(reader)
         log.info { result.rootNode?.toJSON() }
         val rootNode = result.rootNode ?: fail("Result is null")
-        expect("ccc:\n\nddd:") { JSONPointer("/aaa/bbb").find(rootNode).asString }
+        JSONPointer("/aaa/bbb").find(rootNode).asString shouldBe "ccc:\n\nddd:"
     }
 
     @Test fun `should process shorthand tag`() {
         val file = File("src/test/resources/tag2.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect("abc") { result.rootNode.asString }
-        expect("tag:kjson.io,2022:aaa") { result.getTag(JSONPointer.root) }
+        result.rootNode.asString shouldBe "abc"
+        result.getTag(JSONPointer.root) shouldBe "tag:kjson.io,2022:aaa"
     }
 
     @Test fun `should process shorthand tags in array`() {
         val file = File("src/test/resources/tag3.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect("abc") { result.rootNode.asArray[0].asString }
-        expect("tag:kjson.io,2022:aaa") { result.getTag(JSONPointer("/0")) }
-        expect("def") { result.rootNode.asArray[1].asString }
-        expect("tag:kjson.io,2022:bbb") { result.getTag(JSONPointer("/1")) }
-        expect("ghi") { result.rootNode.asArray[2].asString }
-        expect("tag:kjson.io,2022:ccc") { result.getTag(JSONPointer("/2")) }
+        result.rootNode.asArray[0].asString shouldBe "abc"
+        result.getTag(JSONPointer("/0")) shouldBe "tag:kjson.io,2022:aaa"
+        result.rootNode.asArray[1].asString shouldBe "def"
+        result.getTag(JSONPointer("/1")) shouldBe "tag:kjson.io,2022:bbb"
+        result.rootNode.asArray[2].asString shouldBe "ghi"
+        result.getTag(JSONPointer("/2")) shouldBe "tag:kjson.io,2022:ccc"
     }
 
     @Test fun `should process shorthand tags with secondary handle`() {
         val file = File("src/test/resources/tag4.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect("abc") { result.rootNode.asArray[0].asString }
-        expect("tag:kjson.io,2022:aaa") { result.getTag(JSONPointer("/0")) }
-        expect("def") { result.rootNode.asArray[1].asString }
-        expect("tag:kjson.io,2022:bbb") { result.getTag(JSONPointer("/1")) }
-        expect("ghi") { result.rootNode.asArray[2].asString }
-        expect("tag:kjson.io,2022:ccc") { result.getTag(JSONPointer("/2")) }
+        result.rootNode.asArray[0].asString shouldBe "abc"
+        result.getTag(JSONPointer("/0")) shouldBe "tag:kjson.io,2022:aaa"
+        result.rootNode.asArray[1].asString shouldBe "def"
+        result.getTag(JSONPointer("/1")) shouldBe "tag:kjson.io,2022:bbb"
+        result.rootNode.asArray[2].asString shouldBe "ghi"
+        result.getTag(JSONPointer("/2")) shouldBe "tag:kjson.io,2022:ccc"
     }
 
     @Test fun `should process shorthand tags with primary handle`() {
         val file = File("src/test/resources/tag5.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect("abc") { result.rootNode.asArray[0].asString }
-        expect("tag:kjson.io,2022:aaa") { result.getTag(JSONPointer("/0")) }
-        expect("def") { result.rootNode.asArray[1].asString }
-        expect("tag:kjson.io,2022:bbb") { result.getTag(JSONPointer("/1")) }
-        expect("ghi") { result.rootNode.asArray[2].asString }
-        expect("tag:kjson.io,2022:ccc") { result.getTag(JSONPointer("/2")) }
+        result.rootNode.asArray[0].asString shouldBe "abc"
+        result.getTag(JSONPointer("/0")) shouldBe "tag:kjson.io,2022:aaa"
+        result.rootNode.asArray[1].asString shouldBe "def"
+        result.getTag(JSONPointer("/1")) shouldBe "tag:kjson.io,2022:bbb"
+        result.rootNode.asArray[2].asString shouldBe "ghi"
+        result.getTag(JSONPointer("/2")) shouldBe "tag:kjson.io,2022:ccc"
     }
 
     @Test fun `should process shorthand tags with default secondary handle`() {
         val file = File("src/test/resources/tag6.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect(seqTag) { result.getTag(JSONPointer.root) }
-        expect("abc") { result.rootNode.asArray[0].asString }
-        expect("tag:yaml.org,2002:aaa") { result.getTag(JSONPointer("/0")) }
-        expect("def") { result.rootNode.asArray[1].asString }
-        expect("tag:yaml.org,2002:bbb") { result.getTag(JSONPointer("/1")) }
-        expect("ghi") { result.rootNode.asArray[2].asString }
-        expect("tag:yaml.org,2002:ccc") { result.getTag(JSONPointer("/2")) }
+        result.getTag(JSONPointer.root) shouldBe seqTag
+        result.rootNode.asArray[0].asString shouldBe "abc"
+        result.getTag(JSONPointer("/0")) shouldBe "tag:yaml.org,2002:aaa"
+        result.rootNode.asArray[1].asString shouldBe "def"
+        result.getTag(JSONPointer("/1")) shouldBe "tag:yaml.org,2002:bbb"
+        result.rootNode.asArray[2].asString shouldBe "ghi"
+        result.getTag(JSONPointer("/2")) shouldBe "tag:yaml.org,2002:ccc"
     }
 
     @Test fun `should process shorthand tags with default primary handle`() {
         val file = File("src/test/resources/tag6a.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect(seqTag) { result.getTag(JSONPointer.root) }
-        expect("abc") { result.rootNode.asArray[0].asString }
-        expect("!aaa") { result.getTag(JSONPointer("/0")) }
-        expect("def") { result.rootNode.asArray[1].asString }
-        expect("!bbb") { result.getTag(JSONPointer("/1")) }
-        expect("ghi") { result.rootNode.asArray[2].asString }
-        expect("!ccc") { result.getTag(JSONPointer("/2")) }
+        result.getTag(JSONPointer.root) shouldBe seqTag
+        result.rootNode.asArray[0].asString shouldBe "abc"
+        result.getTag(JSONPointer("/0")) shouldBe "!aaa"
+        result.rootNode.asArray[1].asString shouldBe "def"
+        result.getTag(JSONPointer("/1")) shouldBe "!bbb"
+        result.rootNode.asArray[2].asString shouldBe "ghi"
+        result.getTag(JSONPointer("/2")) shouldBe "!ccc"
     }
 
     @Test fun `should process verbatim tags`() {
         val file = File("src/test/resources/tag7.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect(seqTag) { result.getTag(JSONPointer.root) }
-        expect("abc") { result.rootNode.asArray[0].asString }
-        expect("tag:kjson.io,2023:extra") { result.getTag(JSONPointer("/0")) }
-        expect("def") { result.rootNode.asArray[1].asString }
-        expect("!local") { result.getTag(JSONPointer("/1")) }
-        expect("ghi") { result.rootNode.asArray[2].asString }
-        expect(strTag) { result.getTag(JSONPointer("/2")) }
+        result.getTag(JSONPointer.root) shouldBe seqTag
+        result.rootNode.asArray[0].asString shouldBe "abc"
+        result.getTag(JSONPointer("/0")) shouldBe "tag:kjson.io,2023:extra"
+        result.rootNode.asArray[1].asString shouldBe "def"
+        result.getTag(JSONPointer("/1")) shouldBe "!local"
+        result.rootNode.asArray[2].asString shouldBe "ghi"
+        result.getTag(JSONPointer("/2")) shouldBe strTag
     }
 
     @Test fun `should use tag to determine string data type`() {
         val file = File("src/test/resources/tag8.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect(seqTag) { result.getTag(JSONPointer.root) }
-        expect(JSONInt(123)) { result.rootNode.asArray[0] }
-        expect(JSONString("456")) { result.rootNode.asArray[1] }
-        expect(JSONInt(789)) { result.rootNode.asArray[2] }
+        result.getTag(JSONPointer.root) shouldBe seqTag
+        result.rootNode.asArray[0] shouldBe JSONInt(123)
+        result.rootNode.asArray[1] shouldBe JSONString("456")
+        result.rootNode.asArray[2] shouldBe JSONInt(789)
     }
 
     @Test fun `should use tag to determine int or float data type`() {
         val file = File("src/test/resources/tag9.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect(seqTag) { result.getTag(JSONPointer.root) }
-        expect(JSONInt(123)) { result.rootNode.asArray[0] }
-        expect(JSONDecimal("456")) { result.rootNode.asArray[1] }
-        expect(JSONDecimal("789")) { result.rootNode.asArray[2] }
-        expect(JSONInt(987)) { result.rootNode.asArray[3] }
+        result.getTag(JSONPointer.root) shouldBe seqTag
+        result.rootNode.asArray[0] shouldBe JSONInt(123)
+        result.rootNode.asArray[1] shouldBe JSONDecimal("456")
+        result.rootNode.asArray[2] shouldBe JSONDecimal("789")
+        result.rootNode.asArray[3] shouldBe JSONInt(987)
     }
 
     @Test fun `should add float tag for floating point constants`() {
         val file = File("src/test/resources/tag10.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect(seqTag) { result.getTag(JSONPointer.root) }
-        expect(JSONString("abc")) { result.rootNode.asArray[0] }
-        expect(strTag) { result.getTag(JSONPointer("/0")) }
-        expect(JSONString(".nan")) { result.rootNode.asArray[1] }
-        expect(floatTag) { result.getTag(JSONPointer("/1")) }
-        expect(JSONString("-.Inf")) { result.rootNode.asArray[2] }
-        expect(floatTag) { result.getTag(JSONPointer("/2")) }
-        expect(JSONString(".nan")) { result.rootNode.asArray[3] }
-        expect("tag:yaml.org,2002:xxx") { result.getTag(JSONPointer("/3")) }
+        result.getTag(JSONPointer.root) shouldBe seqTag
+        result.rootNode.asArray[0] shouldBe JSONString("abc")
+        result.getTag(JSONPointer("/0")) shouldBe strTag
+        result.rootNode.asArray[1] shouldBe JSONString(".nan")
+        result.getTag(JSONPointer("/1")) shouldBe floatTag
+        result.rootNode.asArray[2] shouldBe JSONString("-.Inf")
+        result.getTag(JSONPointer("/2")) shouldBe floatTag
+        result.rootNode.asArray[3] shouldBe JSONString(".nan")
+        result.getTag(JSONPointer("/3")) shouldBe "tag:yaml.org,2002:xxx"
     }
 
     @Test fun `should add decode percent encoding in tag suffix`() {
         val file = File("src/test/resources/tag11.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect(seqTag) { result.getTag(JSONPointer.root) }
-        expect(JSONString("abc")) { result.rootNode.asArray[0] }
-        expect(strTag) { result.getTag(JSONPointer("/0")) }
-        expect(JSONString("def")) { result.rootNode.asArray[1] }
-        expect("tag:yaml.org,2002:a!") { result.getTag(JSONPointer("/1")) }
+        result.getTag(JSONPointer.root) shouldBe seqTag
+        result.rootNode.asArray[0] shouldBe JSONString("abc")
+        result.getTag(JSONPointer("/0")) shouldBe strTag
+        result.rootNode.asArray[1] shouldBe JSONString("def")
+        result.getTag(JSONPointer("/1")) shouldBe "tag:yaml.org,2002:a!"
     }
 
     @Test fun `should process object with multiple tags`() {
@@ -776,42 +776,42 @@ class ParserTest {
         log.debug { result.rootNode?.toJSON() }
         for ((ptr, tag) in result.tagMap)
             log.debug { "Tag: [$ptr] -> $tag" }
-        expect("tag:kjson.io,2023:aaa.bbb.ccc") { result.getTag(JSONPointer.root) }
+        result.getTag(JSONPointer.root) shouldBe "tag:kjson.io,2023:aaa.bbb.ccc"
         with(result.rootNode.asObject) {
-            expect(1) { size }
+            size shouldBe 1
             with(this["outer"]) {
-                assertIs<JSONObject>(this)
-                expect(4) { size }
+                shouldBeType<JSONObject>()
+                size shouldBe 4
                 with(this["array1"]) {
-                    assertIs<JSONArray>(this)
-                    expect(2) { size }
-                    expect(JSONString("first")) { this[0] }
-                    expect("tag:example.com,2023:no") { result.getTag(JSONPointer("/outer/array1/0"))}
-                    expect(JSONString("second")) { this[1] }
-                    expect("tag:kjson.io,2023:xxx") { result.getTag(JSONPointer("/outer/array1/1"))}
+                    shouldBeType<JSONArray>()
+                    size shouldBe 2
+                    this[0] shouldBe JSONString("first")
+                    result.getTag(JSONPointer("/outer/array1/0")) shouldBe "tag:example.com,2023:no"
+                    this[1] shouldBe JSONString("second")
+                    result.getTag(JSONPointer("/outer/array1/1")) shouldBe "tag:kjson.io,2023:xxx"
                 }
                 with(this["array2"]) {
-                    assertIs<JSONArray>(this)
-                    expect(3) { size }
-                    expect(JSONString("alpha")) { this[0] }
-                    expect("tag:kjson.io,2023:aaa") { result.getTag(JSONPointer("/outer/array2/0"))}
-                    expect(JSONString("beta")) { this[1] }
-                    expect("tag:example.com,2023:bbb") { result.getTag(JSONPointer("/outer/array2/1"))}
-                    expect(JSONString("gamma")) { this[2] }
-                    expect(strTag) { result.getTag(JSONPointer("/outer/array2/2"))}
+                    shouldBeType<JSONArray>()
+                    size shouldBe 3
+                    this[0] shouldBe JSONString("alpha")
+                    result.getTag(JSONPointer("/outer/array2/0")) shouldBe "tag:kjson.io,2023:aaa"
+                    this[1] shouldBe JSONString("beta")
+                    result.getTag(JSONPointer("/outer/array2/1")) shouldBe "tag:example.com,2023:bbb"
+                    this[2] shouldBe JSONString("gamma")
+                    result.getTag(JSONPointer("/outer/array2/2")) shouldBe strTag
                 }
-                expect("!temp") { result.getTag(JSONPointer("/outer/array2")) }
-                expect(JSONString("abc")) { this["inner"] }
-                expect("tag:nowhere.io,2023:extra") { result.getTag(JSONPointer("/outer/inner")) }
+                result.getTag(JSONPointer("/outer/array2")) shouldBe "!temp"
+                this["inner"] shouldBe JSONString("abc")
+                result.getTag(JSONPointer("/outer/inner")) shouldBe "tag:nowhere.io,2023:extra"
                 with(this["obj1"]) {
-                    assertIs<JSONObject>(this)
-                    expect(2) { size }
-                    expect(JSONInt(123)) { this["f1"] }
-                    expect("tag:kjson.io,2023:yyy") { result.getTag(JSONPointer("/outer/obj1/f1")) }
-                    expect(JSONInt(456)) { this["f2"] }
-                    expect(intTag) { result.getTag(JSONPointer("/outer/obj1/f2")) }
+                    shouldBeType<JSONObject>()
+                    size shouldBe 2
+                    this["f1"] shouldBe JSONInt(123)
+                    result.getTag(JSONPointer("/outer/obj1/f1")) shouldBe "tag:kjson.io,2023:yyy"
+                    this["f2"] shouldBe JSONInt(456)
+                    result.getTag(JSONPointer("/outer/obj1/f2")) shouldBe intTag
                 }
-                expect("tag:kjson.io,2023:zzz") { result.getTag(JSONPointer("/outer/obj1")) }
+                result.getTag(JSONPointer("/outer/obj1")) shouldBe "tag:kjson.io,2023:zzz"
             }
         }
     }
@@ -819,37 +819,37 @@ class ParserTest {
     @Test fun `should process multi-document stream`() {
         val file = File("src/test/resources/multi1.yaml")
         val result = Parser().parseStream(file)
-        expect(2) { result.size }
+        result.size shouldBe 2
         log.debug { result[0].rootNode?.toJSON() }
-        expect("abc") { result[0].rootNode.asString }
+        result[0].rootNode.asString shouldBe "abc"
         log.debug { result[1].rootNode?.toJSON() }
-        expect("def") { result[1].rootNode.asString }
+        result[1].rootNode.asString shouldBe "def"
     }
 
     @Test fun `should process multi-document stream using terminator`() {
         val file = File("src/test/resources/multi2.yaml")
         val result = Parser().parseStream(file)
-        expect(2) { result.size }
+        result.size shouldBe 2
         log.debug { result[0].rootNode?.toJSON() }
-        expect("abc") { result[0].rootNode.asString }
+        result[0].rootNode.asString shouldBe "abc"
         log.debug { result[1].rootNode?.toJSON() }
-        expect("def") { result[1].rootNode.asString }
+        result[1].rootNode.asString shouldBe "def"
     }
 
     @Test fun `should process multi-document stream using terminator and directives`() {
         val file = File("src/test/resources/multi3.yaml")
         val result = Parser().parseStream(file)
-        expect(2) { result.size }
+        result.size shouldBe 2
         log.debug { result[0].rootNode?.toJSON() }
-        expect("abc") { result[0].rootNode.asString }
+        result[0].rootNode.asString shouldBe "abc"
         log.debug { result[1].rootNode?.toJSON() }
-        expect("def") { result[1].rootNode.asString }
+        result[1].rootNode.asString shouldBe "def"
     }
 
     @Test fun `should throw exception when using tag from previous document`() {
         val file = File("src/test/resources/multi4.yaml")
-        assertFailsWith<YAMLParseException> { Parser().parseStream(file) }.let {
-            expect("Tag handle !t1! not declared, at 8:5") { it.message }
+        shouldThrow<YAMLParseException>("Tag handle !t1! not declared, at 8:5") {
+            Parser().parseStream(file)
         }
     }
 
@@ -858,12 +858,12 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         result.rootNode.asObject.let {
-            expect(1) { it.size }
+            it.size shouldBe 1
             it["enum"].asArray.let { seq ->
-                expect(3) { seq.size }
-                expect("ABC") { seq[0].asString }
-                expect("123") { seq[1].asString }
-                expect("XYZ") { seq[2].asString }
+                seq.size shouldBe 3
+                seq[0].asString shouldBe "ABC"
+                seq[1].asString shouldBe "123"
+                seq[2].asString shouldBe "XYZ"
             }
         }
     }
@@ -873,12 +873,12 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
         result.rootNode.asObject.let {
-            expect(1) { it.size }
+            it.size shouldBe 1
             it["example"].asArray.let { seq ->
-                expect(1) { seq.size }
+                seq.size shouldBe 1
                 seq[0].asObject.let { mapping ->
-                    expect(1) { mapping.size }
-                    expect("1.5") { mapping["prop1"].asString }
+                    mapping.size shouldBe 1
+                    mapping["prop1"].asString shouldBe "1.5"
                 }
             }
         }
@@ -889,49 +889,49 @@ class ParserTest {
         val result = Parser().parse(file)
         log.debug { JSONSimple.format(result.rootNode) }
         result.rootNode.asObject.let {
-            expect(6) { it.size }
-            expect("http://json-schema.org/draft/2019-09/schema") { it["\$schema"].asString }
-            expect("http://pwall.net/test") { it["\$id"].asString }
-            expect("Product") { it["title"].asString }
-            expect("object") { it["type"].asString }
+            it.size shouldBe 6
+            it["\$schema"].asString shouldBe "http://json-schema.org/draft/2019-09/schema"
+            it["\$id"].asString shouldBe "http://pwall.net/test"
+            it["title"].asString shouldBe "Product"
+            it["type"].asString shouldBe "object"
             it["required"].asArray.let { required ->
-                expect(3) { required.size }
-                expect("id") { required[0].asString}
-                expect("name") { required[1].asString }
-                expect("price") { required[2].asString }
+                required.size shouldBe 3
+                required[0].asString shouldBe "id"
+                required[1].asString shouldBe "name"
+                required[2].asString shouldBe "price"
             }
             it["properties"].asObject.let { properties ->
-                expect(5) { properties.size }
+                properties.size shouldBe 5
                 properties["id"].asObject.let { id ->
-                    expect(2) { id.size }
-                    expect("number") { id["type"].asString }
-                    expect("Product identifier") { id["description"].asString }
+                    id.size shouldBe 2
+                    id["type"].asString shouldBe "number"
+                    id["description"].asString shouldBe "Product identifier"
                 }
                 properties["name"].asObject.let { name ->
-                    expect(2) { name.size }
-                    expect("string") { name["type"].asString }
-                    expect("Name of the product") { name["description"].asString }
+                    name.size shouldBe 2
+                    name["type"].asString shouldBe "string"
+                    name["description"].asString shouldBe "Name of the product"
                 }
                 properties["tags"].asObject.let { tags ->
-                    expect(2) { tags.size }
-                    expect("array") { tags["type"].asString }
+                    tags.size shouldBe 2
+                    tags["type"].asString shouldBe "array"
                     tags["items"].asObject.let { items ->
-                        expect(1) { items.size }
-                        expect("string") { items["type"].asString }
+                        items.size shouldBe 1
+                        items["type"].asString shouldBe "string"
                     }
                 }
                 properties["stock"].asObject.let { stock ->
-                    expect(2) { stock.size }
-                    expect("object") { stock["type"].asString }
+                    stock.size shouldBe 2
+                    stock["type"].asString shouldBe "object"
                     stock["properties"].asObject.let { properties2 ->
-                        expect(2) { properties2.size }
+                        properties2.size shouldBe 2
                         properties2["warehouse"].asObject.let { warehouse ->
-                            expect(1) { warehouse.size }
-                            expect("number") { warehouse["type"].asString }
+                            warehouse.size shouldBe 1
+                            warehouse["type"].asString shouldBe "number"
                         }
                         properties2["retail"].asObject.let { retail ->
-                            expect(1) { retail.size }
-                            expect("number") { retail["type"].asString }
+                            retail.size shouldBe 1
+                            retail["type"].asString shouldBe "number"
                         }
                     }
                 }
