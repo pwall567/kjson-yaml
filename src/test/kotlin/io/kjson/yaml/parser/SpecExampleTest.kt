@@ -26,12 +26,12 @@
 package io.kjson.yaml.parser
 
 import kotlin.test.Test
-import kotlin.test.expect
 
 import java.io.File
 
 import io.kstuff.test.shouldBe
 import io.kstuff.test.shouldBeType
+import io.kstuff.test.shouldContainKey
 
 import io.kjson.JSONArray
 import io.kjson.JSONBoolean
@@ -336,8 +336,8 @@ class SpecExampleTest {
         val file = File("src/test/resources/spec_examples/spec_example_2.15.yaml")
         val result = Parser().parse(file)
         log.debug { result.rootNode?.toJSON() }
-        expect(JSONString("Sammy Sosa completed another fine season with great stats.\n\n  63 Home Runs\n" +
-                "  0.288 Batting Average\n\nWhat a year!\n")) { result.rootNode }
+        result.rootNode shouldBe JSONString("Sammy Sosa completed another fine season with great stats.\n\n" +
+                "  63 Home Runs\n  0.288 Batting Average\n\nWhat a year!\n")
     }
 
     @Test fun `should parse example 2_16 correctly`() {
@@ -406,9 +406,9 @@ class SpecExampleTest {
             this["exponential"] shouldBe JSONDecimal("12.3015e+02")
             this["fixed"] shouldBe JSONDecimal("1230.15")
             this["negative infinity"] shouldBe JSONString("-.inf")
-            expect(floatTag) { result.getTag(JSONPointer("/negative infinity"))}
+            result.getTag(JSONPointer("/negative infinity")) shouldBe floatTag
             this["not a number"] shouldBe JSONString(".nan")
-            expect(floatTag) { result.getTag(JSONPointer("/not a number"))}
+            result.getTag(JSONPointer("/not a number")) shouldBe floatTag
         }
     }
 
@@ -451,13 +451,13 @@ class SpecExampleTest {
             shouldBeType<JSONObject>()
             size shouldBe 3
             this["not-date"] shouldBe JSONString("2002-04-28")
-            expect(strTag) { result.getTag(JSONPointer("/not-date"))}
-            expect(JSONString("R0lGODlhDAAMAIQAAP//9/X\n17unp5WZmZgAAAOfn515eXv\n" +
-                    "Pz7Y6OjuDg4J+fn5OTk6enp\n56enmleECcgggoBADs=\n")) { this["picture"] }
-            expect("tag:yaml.org,2002:binary") { result.getTag(JSONPointer("/picture"))}
-            expect(JSONString("The semantics of the tag\nabove may be different for\n" +
-                    "different documents.\n")) { this["application specific tag"] }
-            expect("!something") { result.getTag(JSONPointer("/application specific tag"))}
+            result.getTag(JSONPointer("/not-date")) shouldBe strTag
+            this["picture"] shouldBe JSONString("R0lGODlhDAAMAIQAAP//9/X\n17unp5WZmZgAAAOfn515eXv\n" +
+                    "Pz7Y6OjuDg4J+fn5OTk6enp\n56enmleECcgggoBADs=\n")
+            result.getTag(JSONPointer("/picture")) shouldBe "tag:yaml.org,2002:binary"
+            this["application specific tag"] shouldBe
+                    JSONString("The semantics of the tag\nabove may be different for\ndifferent documents.\n")
+            result.getTag(JSONPointer("/application specific tag")) shouldBe "!something"
         }
     }
 
@@ -474,44 +474,44 @@ class SpecExampleTest {
                 with(this["center"]) {
                     shouldBeType<JSONObject>()
                     size shouldBe 2
-                    expect(JSONInt(73)) { this["x"]}
-                    expect(JSONInt(129)) { this["y"]}
+                    this["x"] shouldBe JSONInt(73)
+                    this["y"] shouldBe JSONInt(129)
                 }
                 this["radius"] shouldBe JSONInt(7)
             }
-            expect("tag:clarkevans.com,2002:circle") { result.getTag(JSONPointer("/0"))}
+            result.getTag(JSONPointer("/0")) shouldBe "tag:clarkevans.com,2002:circle"
             with(this[1]) {
                 shouldBeType<JSONObject>()
                 size shouldBe 2
                 with(this["start"]) {
                     shouldBeType<JSONObject>()
                     size shouldBe 2
-                    expect(JSONInt(73)) { this["x"]}
-                    expect(JSONInt(129)) { this["y"]}
+                    this["x"] shouldBe JSONInt(73)
+                    this["y"] shouldBe JSONInt(129)
                 }
                 with(this["finish"]) {
                     shouldBeType<JSONObject>()
                     size shouldBe 2
-                    expect(JSONInt(89)) { this["x"]}
-                    expect(JSONInt(102)) { this["y"]}
+                    this["x"] shouldBe JSONInt(89)
+                    this["y"] shouldBe JSONInt(102)
                 }
             }
-            expect("tag:clarkevans.com,2002:line") { result.getTag(JSONPointer("/1"))}
+            result.getTag(JSONPointer("/1")) shouldBe "tag:clarkevans.com,2002:line"
             with(this[2]) {
                 shouldBeType<JSONObject>()
                 size shouldBe 3
                 with(this["start"]) {
                     shouldBeType<JSONObject>()
                     size shouldBe 2
-                    expect(JSONInt(73)) { this["x"]}
-                    expect(JSONInt(129)) { this["y"]}
+                    this["x"] shouldBe JSONInt(73)
+                    this["y"] shouldBe JSONInt(129)
                 }
                 this["color"] shouldBe JSONInt(0xFFEEBB)
                 this["text"] shouldBe JSONString("Pretty vector drawing.")
             }
-            expect("tag:clarkevans.com,2002:label") { result.getTag(JSONPointer("/2"))}
+            result.getTag(JSONPointer("/2")) shouldBe "tag:clarkevans.com,2002:label"
         }
-        expect("tag:clarkevans.com,2002:shape") { result.getTag(JSONPointer.root)}
+        result.getTag(JSONPointer.root) shouldBe "tag:clarkevans.com,2002:shape"
     }
 
     @Test fun `should parse example 2_25 correctly`() {
@@ -521,14 +521,14 @@ class SpecExampleTest {
         with(result.rootNode) {
             shouldBeType<JSONObject>()
             size shouldBe 3
-            containsKey("Mark McGwire") shouldBe true
+            this shouldContainKey "Mark McGwire"
             this["Mark McGwire"] shouldBe null
-            containsKey("Sammy Sosa") shouldBe true
+            this shouldContainKey "Sammy Sosa"
             this["Sammy Sosa"] shouldBe null
-            containsKey("Ken Griffey") shouldBe true
+            this shouldContainKey "Ken Griffey"
             this["Ken Griffey"] shouldBe null
         }
-        expect("tag:yaml.org,2002:set") { result.getTag(JSONPointer.root)}
+        result.getTag(JSONPointer.root) shouldBe "tag:yaml.org,2002:set"
     }
 
     @Test fun `should parse example 2_26 correctly`() {
@@ -541,20 +541,20 @@ class SpecExampleTest {
             with(this[0]) {
                 shouldBeType<JSONObject>()
                 size shouldBe 1
-                expect(JSONInt(65)) { this["Mark McGwire"]}
+                this["Mark McGwire"] shouldBe JSONInt(65)
             }
             with(this[1]) {
                 shouldBeType<JSONObject>()
                 size shouldBe 1
-                expect(JSONInt(63)) { this["Sammy Sosa"]}
+                this["Sammy Sosa"] shouldBe JSONInt(63)
             }
             with(this[2]) {
                 shouldBeType<JSONObject>()
                 size shouldBe 1
-                expect(JSONInt(58)) { this["Ken Griffey"]}
+                this["Ken Griffey"] shouldBe JSONInt(58)
             }
         }
-        expect("tag:yaml.org,2002:omap") { result.getTag(JSONPointer.root)}
+        result.getTag(JSONPointer.root) shouldBe "tag:yaml.org,2002:omap"
     }
 
     @Test fun `should parse example 2_27 correctly`() {
@@ -615,10 +615,9 @@ class SpecExampleTest {
             }
             this["tax"] shouldBe JSONDecimal("251.42")
             this["total"] shouldBe JSONDecimal("4443.52")
-            expect(JSONString("Late afternoon is best. Backup contact is Nancy Billsmer" +
-                    " @ 338-4338.")) { this["comments"] }
+            this["comments"] shouldBe JSONString("Late afternoon is best. Backup contact is Nancy Billsmer @ 338-4338.")
         }
-        expect("tag:clarkevans.com,2002:invoice") { result.getTag(JSONPointer.root)}
+        result.getTag(JSONPointer.root) shouldBe "tag:clarkevans.com,2002:invoice"
     }
 
     @Test fun `should parse example 2_28 correctly`() {
@@ -654,16 +653,16 @@ class SpecExampleTest {
                 with(this[0]) {
                     shouldBeType<JSONObject>()
                     size shouldBe 3
-                    expect(JSONString("TopClass.py")) { this["file"]}
-                    expect(JSONInt(23)) { this["line"]}
-                    expect(JSONString("x = MoreObject(\"345\\n\")\n")) { this["code"]}
+                    this["file"] shouldBe JSONString("TopClass.py")
+                    this["line"] shouldBe JSONInt(23)
+                    this["code"] shouldBe JSONString("x = MoreObject(\"345\\n\")\n")
                 }
                 with(this[1]) {
                     shouldBeType<JSONObject>()
                     size shouldBe 3
-                    expect(JSONString("MoreClass.py")) { this["file"]}
-                    expect(JSONInt(58)) { this["line"]}
-                    expect(JSONString("foo = bar")) { this["code"]}
+                    this["file"] shouldBe JSONString("MoreClass.py")
+                    this["line"] shouldBe JSONInt(58)
+                    this["code"] shouldBe JSONString("foo = bar")
                 }
             }
         }
