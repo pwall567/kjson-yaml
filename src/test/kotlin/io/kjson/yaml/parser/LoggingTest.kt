@@ -29,10 +29,10 @@ import kotlin.test.Test
 
 import java.io.File
 
-import io.kstuff.test.shouldBe
+import io.jstuff.log.LogList
+import io.kstuff.log.isDebug
 
-import net.pwall.log.LogList
-import net.pwall.log.isDebug
+import io.kstuff.test.shouldBe
 
 class LoggingTest {
 

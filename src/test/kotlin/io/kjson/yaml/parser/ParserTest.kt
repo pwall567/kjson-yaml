@@ -37,6 +37,9 @@ import io.kstuff.test.shouldBeSameInstance
 import io.kstuff.test.shouldBeType
 import io.kstuff.test.shouldThrow
 
+import io.jstuff.json.JSONSimple
+import io.kstuff.log.getLogger
+
 import io.kjson.JSON.asArray
 import io.kjson.JSON.asDecimal
 import io.kjson.JSON.asInt
@@ -55,8 +58,6 @@ import io.kjson.yaml.YAML.intTag
 import io.kjson.yaml.YAML.seqTag
 import io.kjson.yaml.YAML.strTag
 import io.kjson.yaml.YAMLException
-import net.pwall.json.JSONSimple
-import net.pwall.log.getLogger
 
 class ParserTest {
 

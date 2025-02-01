@@ -25,7 +25,7 @@
 
 package io.kjson.yaml.parser
 
-import net.pwall.text.TextMatcher
+import io.jstuff.text.TextMatcher
 
 /**
  * An extension of [TextMatcher] to represent a YAML line.

@@ -29,6 +29,8 @@ import kotlin.test.Test
 
 import java.io.File
 
+import io.kstuff.log.getLogger
+
 import io.kstuff.test.shouldBe
 import io.kstuff.test.shouldBeType
 import io.kstuff.test.shouldContainKey
@@ -42,7 +44,6 @@ import io.kjson.JSONString
 import io.kjson.pointer.JSONPointer
 import io.kjson.yaml.YAML.floatTag
 import io.kjson.yaml.YAML.strTag
-import net.pwall.log.getLogger
 
 class SpecExampleTest {
 

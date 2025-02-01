@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>kjson-yaml</artifactId>
-  <version>3.6</version>
+  <version>3.7</version>
   <name>Kotlin YAML processor</name>
   <packaging>jar</packaging>
   <url>https://github.com/pwall567/kjson-yaml</url>
@@ -12,7 +12,7 @@
   <parent>
     <groupId>io.kjson</groupId>
     <artifactId>kjson-maven</artifactId>
-    <version>5.0</version>
+    <version>6.0</version>
   </parent>
 
   <properties>
@@ -62,32 +62,32 @@
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>kjson-core</artifactId>
-      <version>9.2</version>
+      <version>10.0</version>
     </dependency>
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>kjson-pointer</artifactId>
-      <version>8.6</version>
+      <version>8.7</version>
     </dependency>
     <dependency>
-      <groupId>net.pwall.text</groupId>
+      <groupId>io.jstuff</groupId>
       <artifactId>textmatcher</artifactId>
-      <version>2.4</version>
+      <version>3.0</version>
     </dependency>
     <dependency>
-      <groupId>net.pwall.text</groupId>
+      <groupId>io.kstuff</groupId>
       <artifactId>string-mapper</artifactId>
-      <version>2.3</version>
+      <version>3.1</version>
     </dependency>
     <dependency>
-      <groupId>net.pwall.util</groupId>
+      <groupId>io.jstuff</groupId>
       <artifactId>pipelines</artifactId>
-      <version>5.2</version>
+      <version>6.0</version>
     </dependency>
     <dependency>
-      <groupId>net.pwall.log</groupId>
+      <groupId>io.kstuff</groupId>
       <artifactId>log-front-kotlin</artifactId>
-      <version>5.3.1</version>
+      <version>6.0</version>
     </dependency>
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
@@ -100,7 +100,7 @@
     <dependency>
       <groupId>io.kstuff</groupId>
       <artifactId>should-test</artifactId>
-      <version>4.3</version>
+      <version>4.4</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -109,9 +109,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>net.pwall.json</groupId>
+      <groupId>io.jstuff</groupId>
       <artifactId>json-simple</artifactId>
-      <version>1.9</version>
+      <version>2.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
