@@ -4,8 +4,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>kjson-yaml</artifactId>
-  <version>3.8</version>
+  <version>3.9</version>
   <name>Kotlin YAML processor</name>
+  <description>Yaml Parser for Kotlin</description>
   <packaging>jar</packaging>
   <url>https://github.com/pwall567/kjson-yaml</url>
 
@@ -87,7 +88,7 @@
     <dependency>
       <groupId>io.kstuff</groupId>
       <artifactId>log-front-kotlin</artifactId>
-      <version>6.1</version>
+      <version>6.2</version>
     </dependency>
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
@@ -99,8 +100,14 @@
     </dependency>
     <dependency>
       <groupId>io.kstuff</groupId>
+      <artifactId>log-front-testk</artifactId>
+      <version>6.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.kstuff</groupId>
       <artifactId>should-test</artifactId>
-      <version>4.4</version>
+      <version>4.5</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -130,7 +137,7 @@
         <version>3.1.2</version>
         <configuration>
           <systemPropertyVariables>
-            <net.pwall.log.defaultLevel>DEBUG</net.pwall.log.defaultLevel>
+            <io.jstuff.log.defaultLevel>DEBUG</io.jstuff.log.defaultLevel>
           </systemPropertyVariables>
         </configuration>
       </plugin>

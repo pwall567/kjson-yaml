@@ -29,8 +29,8 @@ import kotlin.test.Test
 
 import java.io.File
 
-import io.jstuff.log.LogList
-import io.kstuff.log.isDebug
+import io.kstuff.log.LogList
+import io.kstuff.log.shouldHaveDebug
 
 import io.kstuff.test.shouldBe
 
@@ -41,7 +41,7 @@ class LoggingTest {
             val emptyFile = File("src/test/resources/empty.yaml")
             val result = Parser().parse(emptyFile)
             result.rootNode shouldBe null
-            logList.any { it.isDebug("Parse complete; result is null") } shouldBe true
+            logList shouldHaveDebug "Parse complete; result is null"
         }
     }
 
