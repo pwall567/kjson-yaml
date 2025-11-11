@@ -3,17 +3,18 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
+  <groupId>io.kjson</groupId>
   <artifactId>kjson-yaml</artifactId>
-  <version>3.11</version>
+  <version>3.12</version>
   <name>Kotlin YAML processor</name>
   <description>Yaml Parser for Kotlin</description>
   <packaging>jar</packaging>
   <url>https://github.com/pwall567/kjson-yaml</url>
 
   <parent>
-    <groupId>io.kjson</groupId>
-    <artifactId>kjson-maven</artifactId>
-    <version>6.0</version>
+    <groupId>io.kstuff</groupId>
+    <artifactId>kstuff-maven</artifactId>
+    <version>2.0</version>
   </parent>
 
   <properties>
@@ -83,12 +84,12 @@
     <dependency>
       <groupId>io.jstuff</groupId>
       <artifactId>pipelines</artifactId>
-      <version>6.0</version>
+      <version>7.0</version>
     </dependency>
     <dependency>
       <groupId>io.kstuff</groupId>
       <artifactId>log-front-kotlin</artifactId>
-      <version>6.2</version>
+      <version>7.0</version>
     </dependency>
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
@@ -101,13 +102,13 @@
     <dependency>
       <groupId>io.kstuff</groupId>
       <artifactId>log-front-testk</artifactId>
-      <version>6.2</version>
+      <version>7.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>io.kstuff</groupId>
       <artifactId>should-test</artifactId>
-      <version>4.5</version>
+      <version>4.6</version>
       <scope>test</scope>
     </dependency>
     <dependency>
