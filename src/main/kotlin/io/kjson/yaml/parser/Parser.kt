@@ -267,13 +267,7 @@ class Parser {
     }
 
     private fun createYAMLDocument(rootNode: JSONValue?, context: Context): YAMLDocument {
-        log.debug {
-            val type = when (rootNode) {
-                null -> "null"
-                else -> rootNode::class.simpleName
-            }
-            "Parse complete; result is $type"
-        }
+        log.debug { "Parse complete; result is ${rootNode?.let { it::class.simpleName } ?: "null"}" }
         context.version?.let {
             return YAMLDocument(rootNode, context.tagMap, it.first, it.second)
         }
