@@ -2,6 +2,14 @@
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [3.14] - 2025-11-13
+### Changed
+- `pom.xml`: updated dependency version
+
+## [3.13] - 2025-11-12
+### Changed
+- `pom.xml`: updated dependency version
+
 ## [3.12] - 2025-11-12
 ### Changed
 - `pom.xml`: changed parent POM to `io.kstuff:kstuff-maven:2.0` and added `groupId`
