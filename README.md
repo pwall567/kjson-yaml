@@ -44,13 +44,13 @@ been parsed from JSON.
 It uses the internal JSON representations from the [`kjson-core`](https://github.com/pwall567/kjson-core) library, and
 the YAML node types map to `kjson-core` classes as follows:
 
-- scalars containing integer values that can be represented in a Kotlin `Int`: `JSONInt`
-- scalars containing integer values bigger than an `Int` but that will fit in a `Long`: `JSONLong`
-- all other numeric scalars: `JSONDecimal`
-- boolean scalars: `JSONBoolean`
-- all other scalars: `JSONString`
-- sequences (both block and flow sequences): `JSONArray`
-- mappings (both block and flow mappings): `JSONObject`
+- scalars containing integer values that can be represented in a Kotlin `Int`&emsp;&rArr;&emsp;`JSONInt`
+- scalars containing integer values bigger than an `Int` but that will fit in a `Long`&emsp;&rArr;&emsp;`JSONLong`
+- all other numeric scalars&emsp;&rArr;&emsp;`JSONDecimal`
+- boolean scalars&emsp;&rArr;&emsp;`JSONBoolean`
+- all other scalars&emsp;&rArr;&emsp;`JSONString`
+- sequences (both block and flow sequences)&emsp;&rArr;&emsp;`JSONArray`
+- mappings (both block and flow mappings)&emsp;&rArr;&emsp;`JSONObject`
 
 The documentation for the [`kjson-core`](https://github.com/pwall567/kjson-core) library includes comprehensive details
 on accessing the data in the result classes, but the following hints may be all that many users need:
